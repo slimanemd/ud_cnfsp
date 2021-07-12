@@ -1,0 +1,88 @@
+{% from 'data/data_cnfsp.html' import cmds, lessons %}
+
+<!-- prompt  -->
+{% set prompt = '$ ' %}
+
+<!-- template card  -->
+{% macro card_tpl2(p, i, cmd, outs, tpl, cmt) %}
+    <div class="card">
+        <div class="card-header pd0mg0" id="h00{{i}}">
+        <button class="btn btn-link collapsed pd0mg0 cmd01" style="margin-left:10px;" type="button" data-toggle="collapse"
+                data-target="#c{{p}}_00{{i}}" aria-expanded="false" aria-controls="c{{p}}_00{{i}}" title="Tooltip on top">
+            {{ prompt }} {{ cmd }}
+            {% if cmt != "" %} &emsp; <span style="font-size:10px; color:red">{{ cmt }}</span> {% endif %}
+        </button></div>
+        <div id="c{{p}}_00{{i}}" class="collapse" aria-labelledby="headingOne" data-parent="#a0{{p}}" style="">
+            <div class="card-body">
+                {% if tpl == 'C' %}
+                    <pre> {{ outs }} </pre>
+                {% else %}
+                    <div class="accordion" id="a0{{p}}{{i}}">
+                        {% set keys = (outs.keys()|list) %}
+                        {% set vals = (outs.values()|list) %}
+                        {% for j in range(outs|length) %} {{ card_tpl2(i,i*10+j, keys[j], vals[j], 'C','') }} {% endfor %}
+                     </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+<!-- cards cllection  -->
+{% macro bloc_cap(p,title, dt) %}
+    {% if p > 0 %} <hr> {% endif %}
+    <h5>{{ title }}</h5>
+    <div class="accordion" id="a0{{p}}">
+        {% for i  in range(dt|length) %}
+            {{ card_tpl2(p,i, dt[i][1],dt[i][2], dt[i][0], dt[i][3]) }}
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+<!-- main body  -->
+{% macro mc_body2() %}
+    <center> <h2>Cloud Native Fundamentals Scholarship Program <br>
+                 Nanodegree Program - Udacity</h2></center>
+
+    {% for key in lessons.keys() %}
+            <br><br><br>
+            <h2><b>{{ lessons[key]['title'] }}</b></h2>
+            {% for item in lessons[key]['sections'] %}
+                <br>
+                <h3>{{ item['title'] }}</h3>
+                    {% for e in item['labs'] %}
+                        {{ bloc_cap(e[0],e[1], cmds[e[2]]) }}
+                    {% endfor %}
+            {% endfor %}
+    {% endfor %}
+{% endmacro %}
+
+<html>
+    <head>
+        <link href="https://getbootstrap.com/docs/4.1/dist/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+            body {
+              font-family: Helvetica, sans-serif;
+              width:90%;
+              margin:auto;
+              padding:20px;
+            }
+
+            .cmd01 {
+              font-size: 14px;
+            }
+
+            .pd0mg0 {
+                padding:0px;
+                margin:0px;
+            }
+        </style>
+    </head>
+    <body>
+        {{ mc_body2() }}
+
+        <!-- ================================================================= -->
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+        <script src="https://getbootstrap.com/docs/4.1/dist/js/bootstrap.min.js"></script>
+    </body>
+</html>

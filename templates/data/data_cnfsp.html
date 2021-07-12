@@ -1,0 +1,1898 @@
+<!-- =============================================================== -->
+{% set yaml_dpl01 = '## Set the API endpoint used to create the Deployment resource.' %}
+
+<!-- =============================================================== -->
+{% set cdsrc_pyhw01 ="
+from flask import Flask
+from flask import json
+import logging
+
+app = Flask(__name__)
+
+@app.route('/status')
+def healthcheck():
+    response = app.response_class(
+            response=json.dumps({'result':'OK - healthy'}),
+            status=200,
+            mimetype='application/json'
+    )
+
+    app.logger.info('Status request successfull')
+    return response
+
+@app.route('/metrics')
+def metrics():
+    response = app.response_class(
+            response=json.dumps({'status':'success','code':0,'data':{'UserCount':140,'UserCountActive':23}}),
+            status=200,
+            mimetype='application/json'
+    )
+
+    app.logger.info('Metrics request successfull')
+    return response
+
+@app.route('/')
+def hello():
+    app.logger.info('Main request successfull')
+
+    return 'Hello World!'
+
+if __name__ == '__main__':
+    ## stream logs to a file
+    logging.basicConfig(filename='app.log',level=logging.DEBUG)
+
+    app.run(host='0.0.0.0')"
+%}
+
+<!-- =============================================================== -->
+{% set cdsrc_gohw01 = '
+    # Application version: v1.0.0
+    # port exposed: 6111
+    package main
+
+    import (
+        "fmt"
+        "net/http"
+    )
+
+    func helloWorld(w http.ResponseWriter, r *http.Request){
+        fmt.Fprintf(w, "Hello World")
+    }
+
+    func main() {
+        http.HandleFunc("/", helloWorld)
+        http.ListenAndServe(":6111", nil)
+    }'
+%}
+
+<!-- =============================================================== -->
+{% set cdsrc_gohw02 = '
+    # Application version: v2.0.0
+    # port exposed: 6111
+    package main
+
+    import (
+        "fmt"
+        "net/http"
+    )
+
+    func helloWorld(w http.ResponseWriter, r *http.Request){
+        fmt.Fprintf(w, "Hello World vesion 2")
+    }
+
+    func main() {
+        http.HandleFunc("/", helloWorld)
+        http.ListenAndServe(":6111", nil)
+    }'
+%}
+
+<!-- =============================================================== -->
+{% set k3scfgfl_woc = 'apiVersion: v1
+    clusters:                                 # define the cluster metadata
+    - cluster:
+      certificate-authority-data: {{ CA }}
+      server: https://127.0.0.1:63668
+    name: udacity-cluster
+    users:                                    # define the user details
+    - name: udacity-user                      # user authenticates using client/key certificates
+    user:
+      client-certificate-data: {{ CERT }}
+      client-key-data: {{ KEY }}
+    - name: green-user                        # `green-user` user authenticates using a token
+    user:
+      token: {{ TOKEN }}
+    contexts:                                 # define the contexts
+    - context:
+      cluster: udacity-cluster
+      user: udacity-user
+    name: udacity-context
+    current-context: udacity-context          # set the current context'
+%}
+
+<!-- =============================================================== -->
+{% set vgrfl_gohw = '
+    # set up the default terminal
+    ENV["TERM"]="linux"
+
+    Vagrant.configure("2") do |config|
+
+        # set the image for the vagrant box
+        config.vm.box = "opensuse/Leap-15.2.x86_64"
+        ## Set the image version
+        # config.vm.box_version = "15.2.31.212"
+
+        # st the static IP for the vagrant box
+        config.vm.network "private_network", ip: "192.168.50.4"
+
+        # consifure the parameters for VirtualBox provider
+        config.vm.provider "virtualbox" do |vb|
+        vb.memory = "4096"
+        vb.cpus = 4
+        vb.customize ["modifyvm", :id, "--ioapic", "on"]
+        end
+    end'
+%}
+
+<!-- =============================================================== -->
+{% set vgrfl001_woc = '
+    ENV["TERM"]="linux"                                              # set up the default terminal
+    Vagrant.configure("2") do |config|
+        config.vm.box = "opensuse/Leap-15.2.x86_64"                  # set the image for the vagrant box
+        # config.vm.box_version = "15.2.31.212"                      ## Set the image version
+        config.vm.network "private_network", ip: "192.168.50.4"      # st the static IP for the vagrant box
+        config.vm.provider "virtualbox" do |vb|                      # consifure the parameters for VirtualBox provider
+            vb.memory = "4096"
+            vb.cpus = 4
+            vb.customize ["modifyvm", :id, "--ioapic", "on"]
+        end
+    end'
+%}
+
+<!-- =============================================================== -->
+{% set dkrfl_pyhw = '
+    # set the base image. Since we re running
+    # a Python application a Python base image is used
+    FROM python:3.8
+
+    # set a key-value label for the Docker image
+    LABEL maintainer="Katie Gamanji"
+
+    # copy files from the host to the container filesystem.
+    # For example, all the files in the current directory
+    # to the  `/app` directory in the container
+    COPY . /app
+
+    #  defines the working directory within the container
+    WORKDIR /app
+
+    # run commands within the container.
+    # For example, invoke a pip command
+    # to install dependencies defined in the requirements.txt file.
+    RUN pip install -r requirements.txt
+
+    # provide a command to run on container start.
+    # For example, start the `app.py` application.
+    CMD [ "python", "app.py" ]'
+%}
+
+<!-- =============================================================== -->
+{% set dkrfl_pyhw_woc = '
+    FROM python:3.8
+    LABEL maintainer="Katie Gamanji"
+    COPY . /app
+    WORKDIR /app
+    RUN pip install -r requirements.txt
+    CMD [ "python", "app.py" ]'
+%}
+
+<!-- =============================================================== -->
+{% set dkrfl_gohw_woc = '
+    FROM golang:alpine
+    WORKDIR /go/src/app
+    ADD . .
+    RUN go build  -o helloworld
+    EXPOSE 6111
+    CMD ["./helloworld"]'
+%}
+
+<!-- =============================================================== -->
+{% set outs= {
+'get_po_01':"
+    NAME                             READY   STATUS             RESTARTS   AGE
+    go-helloworld-fcd468f98-d7qmm    1/1     Running            0          4h37m
+    go-helloworld-85645f7987-86c4x   0/1     ImagePullBackOff   0          32m
+    mytest01                         0/1     ErrImagePull       0          12s",
+}
+%}
+
+<!-- =============================================================== -->
+{% set yaml00 =
+{
+   'vrs':
+'## Set the API endpoint used to create the Deployment resource.
+apiVersion: apps/v1',
+   'kind' :
+'## Define the type of the resource.
+kind: Deployment',
+   'metadata' :
+'## Set the parameters that make the object identifiable, such as its name, namespace, and labels.
+metadata:
+  annotations:
+  labels:
+    app: go-helloworld
+  name: go-helloworld
+  namespace: default',
+'spec':
+'## Define the desired configuration for the Deployment resource.
+spec:
+  ## Set the number of replicas.
+  ## This will create a ReplicaSet that will manage 3 pods of the Go hello-world application.
+  replicas: 3
+  ## Identify the pods managed by this Deployment using the following selectors.
+  ## In this case, all pods with the label `go-helloworld`.
+  selector:
+    matchLabels:
+      app: go-helloworld
+  ## Set the RollingOut strategy for the Deployment.
+  ## For example, roll out only 25% of the new pods at a time.
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  ## Set the configuration for the pods.
+  template:
+    ## Define the identifiable metadata for the pods.
+    ## For example, all pods should have the label `go-helloworld`
+    metadata:
+      labels:
+        app: go-helloworld
+    ## Define the desired state of the pod configuration.
+    spec:
+      containers:
+        ## Set the image to be executed inside the container and image pull policy
+        ## In this case, run the `go-helloworld` application in version v2.0.0 and
+        ## only pull the image if it s not available on the current host.
+      - image: pixelpotato/go-helloworld:v2.0.0
+        imagePullPolicy: IfNotPresent
+        name: go-helloworld
+        ## Expose the port the container is listening on.
+        ## For example, exposing the application port 6112 via TCP.
+        ports:
+        - containerPort: 6112
+          protocol: TCP
+        ## Define the rules for the liveness probes.
+        ## For example, verify the application on the main route `/`,
+        ## on application port 6112. If the application is not responsive, then the pod will be restarted automatically.
+        livenessProbe:
+           httpGet:
+             path: /
+             port: 6112
+        ## Define the rules for the readiness probes.
+        ## For example, verify the application on the main route `/`,
+        ## on application port 6112. If the application is responsive, then traffic will be sent to this pod.
+        readinessProbe:
+           httpGet:
+             path: /
+             port: 6112
+        ## Set the resource requests and limits for an application.
+        resources:
+        ## The resource requests guarantees that the desired amount
+        ## CPU and memory is allocated for a pod. In this example,
+        ## the pod will be allocated with 64 Mebibytes and 250 miliCPUs.
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+        ## The resource limits ensure that the application is not consuming
+        ## more than the specified CPU and memory values. In this example,
+        ## the pod will not surpass 128 Mebibytes and 500 miliCPUs.
+          limits:
+            memory: "128Mi"
+            cpu: "500m"'
+}
+%}
+
+<!-- =============================================================== -->
+{% set yaml01 =
+{
+        'vrs':'apps/v1',
+        'kind' : 'Deployment',
+        'metadata' : 'annotations:
+                        deployment.kubernetes.io/revision: "3"
+                      creationTimestamp: "2021-06-22T15:14:36Z"
+                      generation: 4
+                      labels:
+                        app: go-helloworld
+                      name: go-helloworld
+                      namespace: default
+                      resourceVersion: "12259"
+                      uid: 0fd9d7a6-7d94-43d9-bbd4-ea03ec9e1a85',
+        'spec': 'progressDeadlineSeconds: 600
+                      replicas: 1
+                      revisionHistoryLimit: 10
+                      selector:
+                        matchLabels:
+                          app: go-helloworld
+                      strategy:
+                        rollingUpdate:
+                          maxSurge: 25%
+                          maxUnavailable: 25%
+                        type: RollingUpdate
+                      template:
+                        metadata:
+                          creationTimestamp: null
+                          labels:
+                            app: go-helloworld
+                        spec:
+                          containers:
+                          - image: pixelpotato/go-helloworld:v2.0.0
+                            imagePullPolicy: IfNotPresent
+                            name: go-helloworld
+                            resources: {}
+                            terminationMessagePath: /dev/termination-log
+                            terminationMessagePolicy: File
+                          dnsPolicy: ClusterFirst
+                          restartPolicy: Always
+                          schedulerName: default-scheduler
+                          securityContext: {}
+                          terminationGracePeriodSeconds: 30
+                    status:
+                      availableReplicas: 1
+                      conditions:
+                      - lastTransitionTime: "2021-06-22T19:59:27Z"
+                        lastUpdateTime: "2021-06-22T19:59:27Z"
+                        message: Deployment has minimum availability.
+                        reason: MinimumReplicasAvailable
+                        status: "True"
+                        type: Available
+                      - lastTransitionTime: "2021-06-22T19:59:10Z"
+                        lastUpdateTime: "2021-06-22T20:01:00Z"
+                        message: ReplicaSet "go-helloworld-85645f7987" is progressing.
+                        reason: ReplicaSetUpdated
+                        status: "True"
+                        type: Progressing
+                      observedGeneration: 3
+                      readyReplicas: 1
+                      replicas: 2
+                      unavailableReplicas: 1
+                      updatedReplicas: 1
+'},
+%}
+
+<!-- =============================================================== -->
+{% set yaml02 = {
+'name':
+'## file location and name: # .github/workflows/python-version.yml
+##  Named of the workflow.
+name: Python version',
+'on':
+'## Set the trigger policy.
+## In this case, the workflow is execute on a `push` event,
+## or when a new commit is pushed to the repository
+on: [push]',
+'jobs':'
+  check-python-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: python --version'
+}
+%}
+
+<!-- =============================================================== -->
+{% set yaml03 =
+{
+'name': 'Pytest',
+'on': '[push]',
+'jobs':'
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install  pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Test with pytest
+      run: |
+        pytest'
+}
+%}
+
+<!-- =============================================================== -->
+{% set yaml04 = {
+'name': 'Docker Build and Push',
+'on': 'push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]',
+'jobs':'
+  build:                     # This workflow contains a single job called "build"
+    runs-on: ubuntu-latest   # The type of runner that the job will run on
+    steps:                   # Steps represent a sequence of tasks that will be executed as part of the job
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: {{ YOUR_DOCKERHUB_REPOSITORY }}/python-helloworld:latest'
+}
+%}
+
+<!-- =============================================================== -->
+{% set yaml05 = {
+'apiVersion':
+'## Define the type of the resource.
+ apps/v1',
+'kind': 'Deployment',
+'metadata': " ## Set the parameters that make the object identifiable, such as its name, namespace, and labels.
+  annotations:
+  labels:
+    app: go-helloworld
+  name: go-helloworld
+  namespace: default',
+'spec': ' ## Define the desired configuration for the Deployment resource.
+  ## Set the number of replicas.
+  ## This will create a ReplicaSet that will manage 3 pods of the Go hello-world application.
+  replicas: 3
+  ## Identify the pods managed by this Deployment using the following selectors.
+  ## In this case, all pods with the label `go-helloworld`.
+  selector:
+    matchLabels:
+      app: go-helloworld
+  ## Set the RollingOut strategy for the Deployment.
+  ## For example, roll out only 25% of the new pods at a time.
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  ## Set the configuration for the pods.
+  template:
+    ## Define the identifiable metadata for the pods.
+    ## For example, all pods should have the label `go-helloworld`
+    metadata:
+      labels:
+        app: go-helloworld
+    ## Define the desired state of the pod configuration.
+    spec:
+      containers:
+        ## Set the image to be executed inside the container and image pull policy
+        ## In this case, run the `go-helloworld` application in version v2.0.0 and
+        ## only pull the image if it is not available on the current host.
+      - image: pixelpotato/go-helloworld:v2.0.0
+        imagePullPolicy: IfNotPresent
+        name: go-helloworld
+        ## Expose the port the container is listening on.
+        ## For example, exposing the application port 6112 via TCP.
+        ports:
+        - containerPort: 6112
+          protocol: TCP
+        ## Define the rules for the liveness probes.
+        ## For example, verify the application on the main route `/`,
+        ## on application port 6112. If the application is not responsive, then the pod will be restarted automatically.
+        livenessProbe:
+           httpGet:
+             path: /
+             port: 6112
+        ## Define the rules for the readiness probes.
+        ## For example, verify the application on the main route `/`,
+        ## on application port 6112. If the application is responsive, then traffic will be sent to this pod.
+        readinessProbe:
+           httpGet:
+             path: /
+             port: 6112
+        ## Set the resource requests and limits for an application.
+        resources:
+        ## The resource requests guarantees that the desired amount
+        ## CPU and memory is allocated for a pod. In this example,
+        ## the pod will be allocated with 64 Mebibytes and 250 miliCPUs.
+          requests:
+            memory: '64Mi'
+            cpu: '250m'
+        ## The resource limits ensure that the application is not consuming
+        ## more than the specified CPU and memory values. In this example,
+        ## the pod will not surpass 128 Mebibytes and 500 miliCPUs.
+          limits:
+            memory: '128Mi'
+            cpu: '500m'"
+}
+%}
+
+<!-- =============================================================== -->
+{% set yaml06 = {
+'apiVersion':
+'## Set the API endpoint used to create the Service resource.
+v1',
+'kind' :
+'## Define the type of the resource.
+Service',
+'metadata' :
+' ## Set the parameters that make the object identifiable, such as its name, namespace, and labels.
+  labels:
+    app: go-helloworld
+  name: go-helloworld
+  namespace: default
+## Define the desired configuration for the Service resource.
+spec:
+  ## Define the ports that the service should serve on.
+  ## For example, the service is exposed on port 8111, and
+  ## directs the traffic to the pods on port 6112, using TCP.
+  ports:
+  - port: 8111
+    protocol: TCP
+    targetPort: 6112
+  ## Identify the pods managed by this Service using the following selectors.
+  ## In this case, all pods with the label `go-helloworld`.
+  selector:
+    app: go-helloworld
+  ## Define the Service type, here set to ClusterIP.
+  type: ClusterIP'
+}
+%}
+
+<!-- =============================================================== -->
+{% set yaml07 =
+'##  Named of the workflow.
+name: Pytest
+
+## Set the trigger policy.
+## In this case, the workflow is execute on a `push` event,
+## or when a new commit is pushed to the repository
+on: [push]
+
+## List the steps to be executed by the workflow
+jobs:
+  ## Set the name of the job
+  build:
+    ## Configure the operating system the workflow should run on.
+    ## In this case, the job on Ubuntu. Additionally, set a the job
+    ## to execute on different Python versions
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+    ## Define a sequence of steps to be executed
+    steps:
+      ## Use the public `checkout` action  in version v2
+      ## to checkout the existing code in the repository
+    - uses: actions/checkout@v2
+      ## Use the public `setup-python` actoin  in version v2
+      ## to install python on the Ubuntu based environment.
+      ## Additionally, it ensures to loop through all
+      ## the defined Python versions.
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    ## Install all necessary dependecies .
+    ## For example, pytest and any defined packages within the requirements.txt file.
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install  pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    ## Run all pytests by inovking the `pytest command`
+    - name: Test with pytest
+      run: |
+        pytest'
+%}
+
+<!-- =============================================================== -->
+{% set yaml08 = '# This is a basic workflow to help you get started with Actions
+name: Docker Build and Push
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: {{ YOUR_DOCKERHUB_REPOSITORY }}/python-helloworld:latest'
+%}
+
+<!-- =============================================================== -->
+{% set yaml09 =
+'## API endpoint used to create the Application resource
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+## Set the name of the resource and namespace where it should be deployed.
+## In this case the Application resource name is set to  `python-helloworld `
+## and it is deployed in the `argocd` namespace
+metadata:
+  name: python-helloworld
+  namespace: argocd
+spec:
+  ## Set the target cluster and namespace to deploy the Python hello-world application.
+  ## For example, the Python hello-world application is deployed in the `default` namespace
+  ## within the local cluster or `https://kubernetes.default.svc`
+  destination:
+    namespace: default
+    server: https://kubernetes.default.svc
+  ## Set the project the application belongs to.
+  ## In this case the `default` project is used.
+  project: default
+  ## Define the source of the Python hello-world application manifests.
+  ## In this example, the manifests are stored in the `argocd-demo` repository
+  ## under the `python-manifests` folder. Additionally, the latest commit within
+  ## the repository is targeted or `HEAD`.
+  source:
+    path: python-manifests
+    repoURL:
+    https://github.com/kgamanji/argocd-demo
+    targetRevision: HEAD
+  # # Set the sync policy.
+  ## If left empty, the sync policy will default to manual.
+  syncPolicy: {}'
+%}
+
+<!-- =============================================================== -->
+{%  set nginx_chart_dir =
+"+- templates
+ |  +- configmap.yaml
+ |  +- deployment.yaml
+ |  +- namespace.yaml
+ |  +- service.yaml
+ +- Chart.yaml
+ +- values-prod.yaml
+ +- values-staging.yaml
+ +- values.yaml"
+%}
+
+<!-- =============================================================== -->
+{% set yaml09_wc =
+'apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: python-helloworld
+  namespace: argocd
+spec:
+  destination:
+    namespace: default
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: solutions/argocd/python-manifests
+    repoURL: https://github.com/udacity/nd064_course_1
+    targetRevision: HEAD
+  syncPolicy: {}'
+%}
+
+<!-- =============================================================== -->
+{% set get_ns_01 =
+"staging
+ prod"
+ %}
+
+{% set cm_nginx_staging_yaml =
+"   apivrsion: v1
+    items:
+    - apiversion: v1
+      data:
+        version: 1.18.0
+    ...."
+%}
+
+<!-- =============================================================== -->
+{% set cm_nginx_prod_yaml =
+"   apivrsion: v1
+    items:
+    - apiversion: v1
+      data:
+        version: 1.17.0
+    ...."
+%}
+
+
+<!-- =============================================================== -->
+{% set data =
+{
+'yaml00'                : yaml00,
+'yaml01'                : yaml01,
+'yaml02'                : yaml02,
+'yaml03'                : yaml03,
+'yaml04'                : yaml04,
+'yaml05'                : yaml05,
+'yaml06'                : yaml06,
+'yaml07'                : yaml07,
+'yaml08'                : yaml08,
+'yaml09'                : yaml09,
+'yaml09_wc'             : yaml09_wc,
+'nginx-chart-dir'       : nginx_chart_dir,
+'get_ns_01'             : get_ns_01,
+'cm-nginx-staging-yaml' : cm_nginx_staging_yaml,
+'cm-nginx-prod-yaml'    : cm_nginx_prod_yaml,
+'dkrfl_pyhw'            : dkrfl_pyhw_woc,
+'dkrfl_gohw'            : dkrfl_gohw_woc,
+'vgrfl001_woc'          : vgrfl001_woc,
+'k3scfgfl_woc'          : k3scfgfl_woc,
+'cdsrc_pyhw01'          : cdsrc_pyhw01,
+'cdsrc_gohw01'          : cdsrc_gohw01,
+'cdsrc_gohw02'          : cdsrc_gohw02,
+'yaml_dpl01'            : yaml_dpl01,
+'outs'                  : outs,
+}
+%}
+
+<!-- =============================================================== -->
+{% set lessons = {
+    'Kubernetes': {
+        'title': 'Lesson 3: Container Orchestration with Kubernetes',
+        'sections':[
+            {
+                'title': 'A- Docker for Application packaging',
+                'labs':[
+                    (0,"Application Developent & Packaging(Docker) ['Python hello world', 'v1.0.0']", 'cmds_pyhw'),
+                    (1,"Application Developent & Packaging(Docker) ['Go hello world', 'v1.0.0']", 'cmds_gohw')
+                    ]
+            },
+            {
+                'title': 'B- Container Orchestration with Kubernetes',
+                'labs':[
+                    (2,"Vagrant", 'cmds_vagrant'),
+                    (3,"Kubernetes K3S", 'cmds_k3s2'),
+                    (4,"Application Deployment", 'cmds_appdpl01'),
+                    (5,"Application Development Demo go-helloworld v1.0.0", 'cmds_appdpldemo_01'),
+                    (6,"Application Development Demo go-helloworld v2.0.0", 'cmds_appdpldemo_02'),]
+            },
+            {
+                'title': 'C- Kubernetes Resources',
+                'labs':[
+                    (7,"Application Reachability Services + Ingress", 'cmds_appdpl_svc_01'),
+                    (8,"Application Configuration And Context", 'cmds_appcfg_cm_sec_01'),
+                    (9,"Demo Application Context Namespace", 'cmds_appcfg_ns_01'),
+                    (10,"Kubernetes resources exercice solution", 'cmds_appcfg_exo22'),]
+            },
+            {
+                'title': 'D- Declarative Kubernetes Manifests',
+                'labs':[
+                    (11,"Kubernetes resources exercice solution", 'cmds_manifests_01'),
+                    (12,"Kubernetes resources exercice solution", 'cmds_manifests_02'),
+                    (13,"Solution: Declarative Kubernetes Manifests", 'cmds_manifests_03'),]
+            },
+        ]
+    },
+    'ci_cd':{
+        'title': 'Lesson 5: CI/CD with Cloud Native Tooling',
+        'sections': [
+            {
+                'title': 'Continuous Intehgration',
+                'labs': [
+                    (14,"The CI Fundamentals", 'cmds_ci_01'),
+                    (15,"Exercise: Continuous Application Deployment", 'cmds_ci_02'),]
+            },
+            {
+                'title': 'Continuous Delevry',
+                'labs': [
+                    (16,"The CD Fundamentals", 'cmds_cd_01'),
+                    (17,"The Application deployment", 'cmds_cd_appdpl_01'),
+                    (18,"Solution: The CD Fundamentals Exercise", 'cmds_cd_exosol'),]
+            },
+            {
+                'title': 'Configuration Managers',
+                'labs': [
+                    (19,"Helm", 'cmds_cm_helm_01'),
+                    (20,"Helm Exo Solution", 'cmds_cm_helm_exosol_01'),]
+            }
+        ]
+    }
+}
+%}
+
+<!-- =============================================================== -->
+{% set cmds_cm_helm_exosol_01 =
+[
+('C', "ls helm/nginx", data['nginx-chart-dir'],""),
+
+('C', 'cat templates/configmap.yaml',"",""),
+('C', 'cat templates/deployment.yaml',"",""),
+('C', 'cat templates/namespace.yaml',"",""),
+('C', 'cat templates/service.yaml',"",""),
+
+('C', 'cat Chart.yaml',"",""),
+('C', 'cat values.yaml',"",""),
+('C', 'cat values-prod.yaml',"",""),
+('C', 'cat values-staging.yaml',"",""),
+
+('C', 'cat argocd/argocd-nginx.yaml',"",""),
+('C', 'cat argocd/argocd-helm-nginx.yaml',"",""),
+
+('C','kc apply -f argocd-helm-nginx.yaml',"application.agocd.io/nginx created","application.agocd.io/nginx created"),
+('C','brw/argocd nginx',"application.agocd.io/nginx created","application.agocd.io/nginx created"),
+
+('C', 'cat argocd/argocd-helm-nginx-staging.yaml',"",""),
+('C','kc apply -f argocd-helm-nginx-staging.yaml',"application.agocd.io/nginx-staging created","application.agocd.io/nginx-staging created"),
+('C','brw/argocd nginx',"application.agocd.io/nginx-staging created","application.agocd.io/nginx-staging created"),
+
+('C', 'cat argocd/argocd-helm-nginx-prod.yaml',"",""),
+('C','kc apply -f argocd-helm-nginx-prod.yaml',"application.agocd.io/nginx-prod created","application.agocd.io/nginx-prod created"),
+('C','brw/argocd nginx',"application.agocd.io/nginx-prod created","application.agocd.io/nginx-prod created"),
+
+('C', 'kc get ns',data['get_ns_01'],""),
+
+('C', 'kc get deploy -n staging',"ngnix-alpine    1/1     1   1   99s",""),
+('C', 'kc get svc -n staging',"ngnix-alpine    ClusterIP   10.43.171.73   NN   8111/TCP    3m39s",""),
+('C', 'kc get cm -n staging',"ngnix-version    1  4m3s",""),
+('C', 'kc get cm -n staging -o yaml',data['cm-nginx-staging-yaml'],""),
+
+('C', 'kc get deploy -n prod',"ngnix-alpine    2/2     2   2   99s",""),
+('C', 'kc get svc -n prod',"ngnix-alpine    ClusterIP   10.43.185.162   NN   80/TCP    23m39s",""),
+('C', 'kc get cm -n prod',"ngnix-version    1  3m3s",""),
+('C', 'kc get cm -n prod -o yaml',data['cm-nginx-prod-yaml'],""),
+
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_cm_helm_01 =
+[
+('C', "ls helm/python-helloworld",
+"+- templates
+ |  +- deployment.yaml
+ |  +- namespace.yaml
+ +- Chart.yaml
+ +- values-prod.yaml
+ +- values.yaml",""),
+
+('C','cat templates/deployment.yaml',
+"   apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app: python-helloworld
+      name: python-helloworld
+      namespace: {{ .Values.namespace.name }}
+    spec:
+      replicas: {{ .Values.replicaCount }}
+      selector:
+        matchLabels:
+          app: python-helloworld
+      strategy:
+        rollingUpdate:
+          maxSurge: 25%
+          maxUnavailable: 25%
+        type: RollingUpdate
+      template:
+        metadata:
+          labels:
+            app: python-helloworld
+        spec:
+          containers:
+          - image: <b>{{ .Values.image.repository }}:{{ .Values.image.tag }}</b>
+            imagePullPolicy: IfNotPresent
+            name: python-helloworld",""),
+
+('C','cat templates/namespace.yaml',
+"   apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: {{ .Values.namespace.name }}",""),
+
+('C', 'cat Chart.yaml',
+"   apiVersion: v1
+    name: python-helloworld
+    description: Install a Python HelloWorld deployment
+    keywords:
+    - python
+    - helloworld
+    version: 1.0.0
+    maintainers:
+    - name: kgamanji
+      email: kgamanji@xyz.com",""),
+
+('C','cat values.yaml',
+"   namespace:
+      name: test
+
+    image:
+      repository: pixelpotato/python-helloworld
+      tag: v1.0.0
+
+    replicaCount: 3",""),
+
+('C','cat values-prod.yaml',
+"   namespace:
+      name: prod",""),
+
+('C','vi argocd/argocd-python.yaml',
+"   apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: python-helloworld
+      namespace: argocd
+    spec:
+      destination:
+        namespace: default
+        server: https://kubernetes.default.svc
+      project: default
+      source:
+        path: python-manifests
+        repoURL: https://github.com/kgamanji/argocd-demo
+        targetRevision: HEAD
+      syncPolicy: {}",""),
+
+
+
+('C','vi argocd/argocd-helm-python.yaml',
+"   apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: python-helloworld
+      namespace: argocd
+    spec:
+      destination:
+        namespace: default
+        server: https://kubernetes.default.svc
+      project: default
+      source:
+        helm:
+          valueFiles:
+          - values.yaml
+        path: solutions/helm/python-helloworld
+        repoURL: https://github.com/udacity/nd064_course_1
+        targetRevision: HEAD",""),
+
+('C','kc apply -f argocd-helm-python.yaml',"application.agocd.io/python-helloworld created","application.agocd.io/python-helloworld created"),
+
+('C','brw/argocd python-helloworld',"application.agocd.io/python-helloworld created","application.agocd.io/python-helloworld created"),
+
+('C',"cat argocd-helm-python-prod.yaml",
+"   apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: python-helloworld-prod
+      namespace: argocd
+    spec:
+      destination:
+        namespace: default
+        server: https://kubernetes.default.svc
+      project: default
+      source:
+        helm:
+          valueFiles:
+          - values-prod.yaml
+        path: helm-python-helloworld
+        repoURL: https://github.com/kgamanji/argocd-demo
+        targetRevision: HEAD",""),
+
+
+('C','kc apply -f argocd-helm-python-prod.yaml',"application.agocd.io/python-helloworld-prod created","application.agocd.io/python-helloworld-prod created"),
+
+('C','brw/argocd python-helloworld-prod',"application.agocd.io/python-helloworld-prod created","application.agocd.io/python-helloworld-prod created"),
+
+('C','kc get ns',
+"....
+ test        Active  117s
+ prod        Active  64s",""),
+
+('C',"kc get po -n test",
+"python-helloworld-ida01-idb11   1//1 R  0   80s
+ python-helloworld-ida01-idb12   1//1 R  0   80s
+ python-helloworld-ida01-idb13   1//1 R  0   80s",""),
+
+('C',"kc get po -n prod",
+"python-helloworld-ida02-idb21   1//1 R  0   40s
+ python-helloworld-ida02-idb22   1//1 R  0   40s
+ python-helloworld-ida02-idb23   1//1 R  0   40s",""),
+]
+
+
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_cd_exosol =
+[
+('C', "cat argocd-demo/manifest/configmap.yaml",
+"apiVersion: v1
+data:
+  version: alpine
+kind: ConfigMap
+metadata:
+  name: nginx-version
+  namespace: demo", ""),
+
+('C', "cat deployment.yaml",
+"apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+    tag: alpine
+  name: nginx-alpine
+  namespace: demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+      tag: alpine
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: nginx
+        tag: alpine
+    spec:
+      containers:
+      - image: nginx:alpine
+        imagePullPolicy: IfNotPresent
+        name: nginx-alpine
+        resources:
+          requests:
+            cpu: 50m
+            memory: 256Mi", ""),
+
+('C', "cat namespace.yaml",
+"apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    tier: test
+  name: demo", ""),
+
+('C', "cat service.yaml",
+"apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+    tag: alpine
+  name: nginx-alpine
+  namespace: demo
+spec:
+  ports:
+  - port: 8111
+    protocol: TCP
+    targetPort: 8111
+  selector:
+    app: nginx
+    tag: alpine
+  type: ClusterIP", ""),
+
+('C', 'vi argocd-nginx.yaml',
+"   apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: nginx-alpine
+      namespace: argocd
+    spec:
+      destination:
+        namespace: default
+        server: https://kubernetes.default.svc
+      project: default
+      source:
+        path: manifests                                   # path to the folder with the YAML manifests
+        repoURL: https://github.com/kgamanji/argocd-demo
+        targetRevision: HEAD
+      syncPolicy: {}                                      # Sync policy", ""),
+
+('C', 'kc apply -f argocd-nginx.yaml', "application.argocd.io/nginx-alpine created",""),
+('C', 'kc get application -n argocd',
+"NAME         AGE
+nginx-alpine  16s", ""),
+('C', 'brwser/argocd',"",""),
+('C', 'kc get ns',"... demo Active 44s",""),
+('C', 'kc get deploy -n demo',"nginx-alpine     3/3     3   3   57s",""),
+('C', 'kc get svc -n demo',"nginx-alpine    ClusterIP   10.42.123.144   NN  8111/TCP    69s",""),
+('C', 'kc get cm -n demo',"nginx-version    1     81s",""),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_cd_appdpl_01 =
+[
+('C',"vi agrocd-python",
+"apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: python-helloworld
+  namespace: argocd
+spec:
+  destination:
+    namespace: default
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: solutions/argocd/python-manifests
+    repoURL: https://github.com/udacity/nd064_course_1
+    targetRevision: HEAD
+  syncPolicy: {}",""),
+
+('C',"kc apply -f agrocd-python.yaml","application.argocd.io/python-helloworld created",""),
+('C',"kc get application -n  argocd",
+"NAME    AGE
+python-helloworld   18s",""),
+
+('C',"brwser/argocd-ui","",""),
+
+('C',"kc get po -A",
+"kube-system ....
+ argocd ....
+ default     pyhw-ida60-idb60    0/1     ContainerCreating   0   31s
+ default     pyhw-ida60-idb61    0/1     ContainerCreating   0   31s
+ default     pyhw-ida60-idb62    0/1     ContainerCreating   0   31s",""),
+
+('C',"kc get po",
+"pyhw-ida60-idb60    0/1     ContainerCreating   0   75s
+ pyhw-ida60-idb61    0/1     ContainerCreating   0   75s
+ pyhw-ida60-idb62    0/1     ContainerCreating   0   75s",""),
+
+('C',"kc get po",
+"pyhw-ida60-idb60    1/1     Running   0   2m5s
+ pyhw-ida60-idb61    1/1     Running   0   2m5s
+ pyhw-ida60-idb62    1/1     Running   0   2m5s",""),
+
+('C',"vi ...","",""),
+
+('C', "kc get po",
+"NAME                READY   STATUS      RESTARTS    AGE
+pyhw-ida70-idb70    1/1     Running     0           25s
+pyhw-ida60-idb60    1/1     Terminating 0           4m5s
+pyhw-ida70-idb71    1/1     Running     0           25s
+pyhw-ida61-idb61    1/1     Terminating 0           4m5s
+pyhw-ida70-idb72    1/1     Running     0           25s
+pyhw-ida62-idb62    1/1     Terminating 0           4m5s",""),
+
+('C',"kc get po",
+"NAME                READY   STATUS      RESTARTS    AGE
+pyhw-ida70-idb70    1/1     Running     0           45s
+pyhw-ida70-idb71    1/1     Running     0           45s
+pyhw-ida70-idb72    1/1     Running     0           45s",""),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_cd_01 =
+[
+('C', "kc get no",
+"NAME       STATUS  ROLE    AGE     VERSION
+ localhost  Ready   master  8m44s   v1.19", ""),
+
+('C','kc get po -A',
+"kube-system     metric-server-ida01-idb01           1/1     Running     0   8m44s
+kube-system     coredns-ida01-idb01                 1/1     Running     0   8m44s
+kube-system     local-path-provisioner-ida01-idb01  1/1     Running     0   8m44s
+kube-system     helm-install-trafik-tshzz           1/1     Running     0   8m44s
+kube-system     svclb-traefik-rhk78                 1/1     Running     0   8m44s
+kube-system     traefik-ida02-idb02                 1/1     Running     0   8m44s", ""),
+
+('C','kc create namespace argocd', "ns/argocd created", ""),
+
+('C', 'kc apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml',
+"# Create the NodePort service for ArgoCD server by using the
+# `kubectl apply -f argocd-server-nodeport.yaml` command
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: argocd-server
+    app.kubernetes.io/part-of: argocd
+  name: argocd-server-nodeport
+  namespace: argocd
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+    nodePort: 30007
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 8080
+    nodePort: 30008
+  selector:
+    app.kubernetes.io/name: argocd-server
+  type: NodePort", ""),
+
+('C','kc get po -n argocd',
+"NAME    READY   STATUS  RESTARTS     AGE
+argocd-application-controller-ida01-idb01   0/1     ContainerCreating   0   10s
+argocd-redis-ida02-idb02                    0/1     ContainerCreating   0   10s
+argocd-dex-server-ida03-idb03               0/1     Init:0/1            0   10s
+argocd-repo-server-ida04-idb04              0/1     ContainerCreating   0   10s
+argocd-server-ida05-idb05                   0/1     ContainerCreating   0   10s",""),
+
+('C','kc get svc -n argocd',
+"NAME    READY   STATUS  RESTARTS     AGE
+argocd-dex-server       ClusterIP   10.43.174.55    NN  5556/TCP,5557/TCP,5558/TCP  8m30s
+argocd-metrics          ClusterIP   10.43.46.208    NN  8082/TCP                    8m30s
+argocd-redis            ClusterIP   10.43.233.6     NN  6379/TCP                    8m30s
+argocd-repo-server      ClusterIP   10.43.18.237    NN  8081/TCP                    8m30s
+argocd-server-metrcis   ClusterIP   10.43.4.97      NN  8083/TCP                    8m30s
+argocd-server           ClusterIP   10.43.166.49    NN  80/TCP,443/TCP              8m30s",""),
+
+('C','kc get svc -n argocd  argdocd-server -n yaml',"",""),
+('C',"kc get svc -n argocd  argdocd-server -n yaml > argocd-nodeport.yaml","",""),
+('C','vi argocd-nodeport.yaml', 'kc apply -f argocd-nodeport.yaml',"svc/argocd-server-nodeport created",""),
+('C','kc get svc -n argocd',
+"...
+argocd-server-nodeport NodePort   10.43.119.6     NN  80:30007/TCP,443:30008/TCP  14s",""),
+
+('C',"$# vi nd064_c1_internal/exe/vagrantfile",
+'....
+config.vm.network private_network", ip:"192.168.50.4"
+....',""),
+
+('C',"kc get po -n argcd -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2",
+"argocd-server-ida01-idb01",""),
+
+('C',"brwser  192.168.50.4:30008","login admin, argocd-server-ida01-idb01", "login admin, argocd-server-ida01-idb01"),
+
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_ci_02 =
+[
+('C', ".github/workflows/docker-build.yaml", data['yaml08'], ""),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_ci_01 =
+[
+('C', "cat Dockerfile",
+'....
+# use pip to install any application dependencies
+RUN pip install -r requirements.txt
+...
+# execute command  on the container start
+CMD [ "python", "app.py" ]', "# build steps in Dockerfile"),
+
+('C', "cat test01.py",
+"## Define a test that will always pass successfully
+def test_always_passes():
+    assert True", ""),
+
+('C', "Run pytest",
+"============================= test session starts ==============================
+platform linux -- Python 3.8.6, pytest-6.2.1, py-1.10.0, pluggy-0.13.1
+rootdir: /home/runner/work/nd064_course_1/nd064_course_1
+collected 1 item
+
+solutions/python-helloworld/test_with_pytest.py .                        [100%]
+
+============================== 1 passed in 0.02s ===============================",
+"# pytest - for functional testing of the application"),
+
+('C', "docker build -t python-helloworld .", "...", "# build an image using a Dockerfile"),
+('C', "docker push pixelpotato/python-helloworld:v1.0.0", "...", "# store and distribute an image using DockerHub"),
+('C',"ls pythonhelloworld/.github/workflows",
+"docker-build.yaml
+pytest.yml
+python-version.yml
+test-ci.yml",""),
+
+('C',"cat pytest.yml", data['yaml07'], "task workflow"),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_manifests_03 =
+[
+('C', "cat configmap.yaml",
+"apiVersion: v1
+data:
+  version: alpine
+kind: ConfigMap
+metadata:
+  name: nginx-version
+  namespace: demo", ""),
+
+('C', "cat deployment.yaml",
+"apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+    tag: alpine
+  name: nginx-alpine
+  namespace: demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+      tag: alpine
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: nginx
+        tag: alpine
+    spec:
+      containers:
+      - image: nginx:alpine
+        imagePullPolicy: IfNotPresent
+        name: nginx-alpine", ""),
+
+('C', "cat namespace.yaml",
+"apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    tier: test
+  name: demo", ""),
+
+('C', "cat service.yaml",
+"apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+    tag: alpine
+  name: nginx-alpine
+  namespace: demo
+spec:
+  ports:
+  - port: 8111
+    protocol: TCP
+    targetPort: 8111
+  selector:
+    app: nginx
+    tag: alpine
+  type: ClusterIP", ""),
+
+('C', 'kc apply -f exercises/manifests/', "",""),
+
+('C', 'kc get all -n demo',
+"NAME                                READY   STATUS    RESTARTS   AGE
+pod/nginx-alpine-798fb5b8bb-8rzq9   1/1     Running   0          12s
+pod/nginx-alpine-798fb5b8bb-ms28l   1/1     Running   0          12s
+pod/nginx-alpine-798fb5b8bb-qgqb2   1/1     Running   0          12s
+
+NAME                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+service/nginx-alpine   ClusterIP   10.109.197.180   <none>        8111/TCP   18s
+
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nginx-alpine   3/3     3            3           12s
+
+NAME                                      DESIRED   CURRENT   READY   AGE
+replicaset.apps/nginx-alpine-798fb5b8bb   3         3         3       12s", ""),
+
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_manifests_02 =
+[
+('Y',"kc get deploy xxx -o yaml", data['yaml05'], "# yaml Manifest apiversion, kind, metadata, spec"),
+('Y',"kc get deploy xxx -o yaml", data['yaml06'], "# yaml Manifest apiversion, kind, metadata, spec"),
+('C', "kc apply -f manifest.yaml",
+"created", "# create a resource defined in the YAML manifests with the name manifest.yaml"),
+('C', "kc delete -f manifest.yaml", "deleted", "# delete a resource defined in the YAML manifests with the name manifest.yaml"),
+('C', "kc create RESOURCE [REQUIRED FLAGS] --dry-run=client -o yaml", "created", "# get YAML template for a resource"),
+('C', "kc create deploy demo --image=nginx --dry-run=client -o yaml", "created", "# get the base YAML templated for a demo Deployment running a nxing application"),
+('C', "kc get ns",
+"NAME                STATUS  AGE
+default             Active  123m
+kube-node-lease     Active  123m
+kube-public         Active  123m
+kube-system         Active  123m
+local-path-storage  Active  123m
+test-udacity        Active  123m", ""),
+
+('C', "kc create ns demo --dry-run=client -o yaml",
+"apiversion: v1
+kind: Namespace
+metadata:
+    createTimestamp: null
+    name:  demo
+spec: {}
+status: {}", ""),
+
+('C', "kc create ns demo --dry-run=client -o yaml > namespace.yaml", "", ""),
+
+('C', "cat namespace.yaml",
+"apiversion: v1
+kind: Namespace
+metadata:
+    createTimestamp: null
+    name:  demo
+spec: {}
+status: {}", ""),
+
+('C', "kc apply -f namespace.yaml", "namespace created", ""),
+
+('C', "kc get ns",
+"NAME        STATUS  AGE
+demo        Active  8s", ""),
+
+('C', "kc create deploy  busbox --image=busybox  -r=5 -n demo --dry-run=client -o yaml",
+"apiversion: apps/v1
+kind: Deployment
+metadata:
+    creationTimestamp: null
+    labels:
+        app: busybox
+spec: ...
+status: {}", ""),
+
+('C', "kc create deploy  busbox --image=busybox  -r=5 -n demo --dry-run=client -o yaml > deploy.yaml", ""),
+
+('C', "cat deploy.yaml", "....",""),
+
+('C', "kc apply -f deploy.yaml", "created", ""),
+
+('C', "kc get deploy -n demo",
+"NAME        READY   UPDATE  AVAILABLE   AGE
+busybox     0/5     5       0           16s",""),
+
+('C', "kc get po -n demo",
+"NAME                        READY   STATUS          AGE
+busybox-6cf8756958-5n8zc    0/1     completed   2   35s
+busybox-6cf8756958-69xqm    0/1     completed   2   35s
+busybox-6cf8756958-j6xl2    0/1     completed   2   35s
+busybox-6cf8756958-mvh69    0/1     completed   2   35s
+busybox-6cf8756958-rkbpp    0/1     completed   2   35s",""),
+
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_manifests_01 =
+[
+('C',"kc get deploy xxx -o yaml", data['yaml_dpl01'], "# yaml Manifest apiversion, kind, metadata, spec"),
+('C',"kc label ns demo tier=test", "ns label tier=test","# label the namespace"),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_appcfg_exo22 =
+[
+('C',"kc create ns demo",
+"ns demo created",
+"# create the namespace, label option is not available with `kubectl create`"),
+
+('C',"kc label ns demo tier=test",
+"ns label tier=test",
+"# label the namespace"),
+
+('C',"kc create deploy nginx-alpine --image=nginx:alpine  --replicas=3 --namespace demo",
+"deployment nginx-alpine created",
+"# create the nginx-alpine deployment"),
+
+('C',"kc label deploy nginx-alpine app=nginx tag=alpine --namespace demo",
+"label deploy nginx-alpine",
+"# label the deployment"),
+
+('C',"kc expose deployment nginx-alpine --port=8111 --namespace demo",
+"service/nginx-alpine created",
+"# expose the nginx-alpine deployment, which will create a service"),
+
+('C',"kc create configmap nginx-version --from-literal=version=alpine --namespace demo",
+"cm nginx-alpine created",
+"# create a config map"),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_appcfg_ns_01 =
+[
+('C',"kc get ns",
+"NAME                STATUS  AGE
+ default             Active  116m
+ kube-node-lease     Active  116m
+ kube-public         Active  116m
+ kube-system         Active  116m
+ kube-path-storage   Active  116m",
+""),
+
+('C',"kubectl create ns test-udacity",
+"namespace/test-udacity created",
+"# create a `test-udacity` Namespace"),
+
+('C',"kc get ns",
+"NAME                STATUS  AGE
+ ....
+ test-udacity        Active  8s",
+""),
+
+('C',"kc get po",
+"NAME    READY   STATUS  RESTART     AGE
+ go-helloworld-85468c6d6c    1/1     Running     0   43m",
+""),
+
+('C',"kc get po -n test-udacity",
+"No resources found in test-udacity namspace",
+"# get all the pods in the `test-udacity` Namespace"),
+
+('C',"kc create depoly go-helloworld --image=pixelpotato/go-helloworld:v2.0.0 -n test -n test-udacity",
+"# deployment.apps/go-helloworld created",
+""),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_appcfg_cm_sec_01 =
+[
+('C',"kc get cm",
+"# No resource found",
+"# NRFIDNS"),
+
+('C',"kc create configmap test-cm --from-literal=color=yellow",
+"# configmap/test-cm created",
+"# create a Configmap to store the color value"),
+
+('C',"kc get cm",
+"NAME    DATA    AGE
+ test-cm 1       9s",
+"# test-cm"),
+
+('C',"kc describe cm test-cm",
+"NAME:   test-cm
+ Namespace: default
+ Labels: NN
+ Annotations: NN
+ Data
+ ====
+ color:
+ -----
+ blue
+ Events: NN",
+""),
+
+('C',"kc  secret generic test-secret --from-literal=color=red",
+"NAME    TYPE    DATA    AGE
+ default-token-9xjp7     Kubernetes.io/services-account-token    3   108m",
+"# create a Secret to store the secret color value"),
+
+('C',"kc get cm",
+"# secret/test-secret created",
+"# NRFIDNS"),
+
+('C',"kc get secrets",
+"NAME    TYPE    DATA    AGE
+ test-secret             Opaque    1   9s
+ default-token-9xjp7     Kubernetes.io/services-account-token    3   109m",
+"# test-secret + default-token-9xjp7"),
+
+('C',"kc describe secrets test-sec",
+"Name: test-sec
+ Namespace: NN
+ Labels: NN
+ Type: Opaque
+ Data
+ ====
+ color: 3 bytes",
+""),
+
+('C',"kc get secret test-sec -o yaml",
+'apiVersion: v1
+   Data:
+     color: cmVk
+     kind: Secret
+metadata:
+  creationTimestamp: "2020-12-09T20:07:16Z"
+  name: my-secret-pod
+  namespace: defaul
+  resourceVersion: "1323"',
+""),
+
+('C','echo "cmVk" | base64 -D',
+"# red",
+"# red"),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_appdpl_svc_01 =
+[
+('C',"kc get svc",
+"NAME TYPE CLUSTER-IP    EXTERNAL    PORTS   AGE
+ kubernetes  ClusterIP   10.96.0.1   nn  443/TCP     80m",
+"# default kubernetes service"),
+
+('C',"kubectl expose deploy go-helloworld --port=8111 --target-port=6112",
+"# service/go-helloworld exposed",
+"# expose the `go-helloworld` deployment on port 8111, the application is serving requests on port 6112"),
+
+('C',"kc get svc",
+"NAME TYPE CLUSTER-IP    EXTERNAL    PORTS   AGE
+ kubernetes  ClusterIP   10.96.0.1   nn  443/TCP     80m
+ go-helloworld  ClusterIP   10.105.166.228   nn  6112/TCP     9s",
+"# create new service go-helloworld "),
+
+('C',"kc run test-RANDOM --namespace=default --rm -it --image=alpine --sh",
+"/ # wget -q0 10.105.166.228:6112  => hello world version 2",
+"# is pod shell run cmd / # wget -q0 10.98.151.167:6112 "),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_appdpl01 =
+[
+('C',"kc create deploy go-helloworld --image=pixelpotato/go-helloworld:v1.0.0 -n test",
+    "#...[INFO] systemd: Starting k3s", "# create a go-helloworld Deployment in namespace `test`"),
+
+('C',"kc run -it busybox-test --image=busybox --restart=Never", "# ..........",
+    "# example: create a busybox pod, with an interactive shell and a restart policy set to Never"),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_appdpldemo_01 =
+[
+('C',"kc get deploy", "# no resources found in default namespace", "# no resources found in default namespace"),
+('C',"kc get rs", "# no resources found in default namespace", "# no resources found in default namespace"),
+('C',"kc get po", "# no resources found in default namespace", "# no resources found in default namespace"),
+('C',"kc create deploy go-helloworld --image=pixelpotato/go-helloworld:v1.0.0", "# deployment.apps/go-helloworld created", "# deployment.apps/go-helloworld created"),
+('C',"kc get deploy",
+"NAME 	READY 	UPDATE	AVAILABLE	AGE
+ go-helloworld	0/1	1	0	20s", ""),
+('C',"kc get rs",
+"NAME 	DESIRED 	CURRENT READY	AGE
+ go-helloworld-fcd0890	1	1	0	20s",
+"# rs.id go-helloworld-fcd0890"),
+
+('C',"kc get po",
+"NAME 	READY 	STATUS	RESTART	AGE
+ go-helloworld-fcd0890-zjvlg	1/1	Running	0	20s",
+"# po.id go-helloworld-fcd0890-zjvlg"),
+
+('C',"kc port-forward po/go-helloworld-fcd0890-zjvlg 6111:6111",
+"Forwarding from  127.0.01:6111 -> 6111
+ Forwarding from  [::1]:6111 -> 6111             # Test Browser@: 127.0.01:6111  => Hello World",
+"# acces to pod go-helloworld-fcd0890-zjvlg"),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_appdpldemo_02 =
+[
+('C',"vi app.go", data['cdsrc_gohw02'], "# Go hello-world application update the version v1.0.0 to v2.0.0"),
+('C',"kc edit deploy go-helloworld -o yaml",
+"# change version v1.0.0 to v2.0.0",
+"# deploy new version v2.0.0"),
+
+('C',"kc get rs",
+"NAME 	DESIRED 	CURRENT READY	AGE
+ go-helloworld-8546d6c	1	1	0	20s
+ go-helloworld-fcd0890	0	0	0	3m30s",
+"# old rs go-helloworld-fcd0890 terminated & new rs go-helloworld-8546d6c started"),
+
+('C',"kc get po",
+"NAME 	READY 	STATUS	RESTART	AGE
+ go-helloworld-8546d6c-rpr71	1/1	Running	0	25s",
+"# new pod go-helloworld-8546d6c-rpr71 started"),
+
+('C',"kc port-forward po/go-helloworld-fcd0890-zjvlg 6111:6111",
+'Forwarding from  127.0.01:6111 -> 6111
+ Forwarding from  [::1]:6111 -> 6111   # Test Browser@: 127.0.01:6111  => error
+ Handling connection for 6111
+ E1209 20:33:13:640268 53587 portforward.go:400] an error occured forwarding 6111->6111
+ Error forwarding port 6111 to pod id01 uid: failed to exe portforward in network
+ namespace "var/run/neyns/ci-31fn6b82-dec0-fsdf-fgf-jgh878979":
+ failed to dial 6111: dial tcp4 127.0.0.1:6111: connect: connection refused ^C',
+"# Error PF"),
+
+('C',"kc port-forward po/go-helloworld-8546d6c-rpr71 6112:6112",
+"Forwarding from  127.0.01:6112 -> 6112
+ Forwarding from  [::1]:6112 -> 6112       # Test Browser@: 127.0.01:6111  => Hello World version 2",
+"# connection ok on 6112"),
+
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_vagrant =
+[
+('C',"cat VagrantFile", data['vgrfl001_woc'], "# To package a Go hello-world application"),
+('C',"vg install", data['vgrfl001_woc'], "# https://www.vagrantup.com/downloads"),
+('C',"vg version", "Installed Version : 2.2.10 \n python manage.py runserver latest Version: 2.2.14", "# To package a Go hello-world application"),
+('C',"vg up","# create a vagrant box using the Vagrantfile in the current directory", "# create a vagrant box using the Vagrantfile in the current directory"),
+('C',"vg status","# Inspect available vagrant boxes", "# Inspect available vagrant boxes"),
+('C',"vg ssh", "# SSH into the vagrant box
+ # Note: this command uses the .vagrant folder to identify the details of the vagrant box", "# SSH into the vagrant box"),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_k3s =
+[
+('C',"curl -sfL https://get.k3s.io | sh -     # install k3s https://k3s.io/", "#...[INFO] systemd: Starting k3s"),
+('C',"vi /etc/rancher/k3s/k3s.yaml  # Kubeconfig file cluster metadata", data['k3scfgfl_woc']),
+('C',"sudo su","# avoid permission denied to open /etc/rancher/k3s/k3s.yaml"),
+
+('C',"kc cluster-info # get the control plane and add-ons endpoints",
+"Kubernetes master is running at https://127.0.0.1:6443
+ CoreDNS is running at https://127.0.0.1:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+ Metrics-server is running at https://127.0.0.1:6443/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy"),
+
+('C',"kc get nodes # to get all the nodes in the cluster abbreviated by no",
+"NAME        STATUS  ROLES   AGE     VERSION
+ localhost   Ready   master  61s     v1.19.4+k3s1"),
+
+('C',"kc get nodes -o wide # to get extra details about the nodes, including internal IP",
+"NAME        STATUS   ROLES    AGE   VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION            CONTAINER-RUNTIME
+ localhost   Ready    master   74m   v1.18.9+k3s1   10.0.2.15     <none>        openSUSE Leap 15.2   5.3.18-lp152.47-default   containerd://1.3.3-k3s2"),
+
+('C',"kc describe node node-name # to get all the configuration details about the node, including the allocated pod CIDR",
+"kc describe node localhost | grep CIDR
+ PodCIDR:                      10.42.0.0/24
+ PodCIDRs:                     10.42.0.0/24"),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_k3s2 =
+[
+('C',"curl -sfL https://get.k3s.io | sh -", "#...[INFO] systemd: Starting k3s", "# install k3s https://k3s.io/"),
+('C',"vi /etc/rancher/k3s/k3s.yaml", data['k3scfgfl_woc'], "# Kubeconfig file cluster metadata"),
+('C',"sudo su","# avoid permission denied to open /etc/rancher/k3s/k3s.yaml", ""),
+
+('C',"kc cluster-info",
+"Kubernetes master is running at https://127.0.0.1:6443
+ CoreDNS is running at https://127.0.0.1:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+ Metrics-server is running at https://127.0.0.1:6443/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy",
+ "# get the control plane and add-ons endpoints"),
+
+('C',"kc get nodes",
+"NAME        STATUS  ROLES   AGE     VERSION
+ localhost   Ready   master  61s     v1.19.4+k3s1",
+ "# to get all the nodes in the cluster abbreviated by no"),
+
+('C',"kc get nodes -o wide",
+"NAME        STATUS   ROLES    AGE   VERSION        INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION            CONTAINER-RUNTIME
+ localhost   Ready    master   74m   v1.18.9+k3s1   10.0.2.15     <none>        openSUSE Leap 15.2   5.3.18-lp152.47-default   containerd://1.3.3-k3s2",
+ "# to get extra details about the nodes, including internal IP"),
+
+('C',"kc describe node node-name",
+"kc describe node localhost | grep CIDR
+ PodCIDR:                      10.42.0.0/24
+ PodCIDRs:                     10.42.0.0/24",
+ "# to get all the configuration details about the node, including the allocated pod CIDR"),
+
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_gohw =
+[
+('C',"cat app.go", data['cdsrc_gohw01'], "# Go hello-world application version 1 v1.0.0"),
+('C',"cat Dockerfile", data['dkrfl_gohw'], "# To package a Go hello-world application"),
+('C',"dk build -t go-helloworld .",
+"# build an image using the Dockerfile from the `lesson1/go-app` directory
+ (default current directory .)", ""),
+
+('C',"dk run -d -p 5111:5000 go-helloworld",
+"# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
+
+('C',"dk tag go-helloworld pixelpotato/go-helloworld:v1.0.0",
+"# tag the `go-helloworld` image, to be pushed
+ # in the `pixelpotato` repository, with the `go-helloworld` image name
+ # and version `v1.0.0`", ""),
+
+('C',"dk push pixelpotato/go-helloworld:v1.0.0",
+"# push the `python-helloworld` application in version v1.0.0
+ # to the `pixelpotato` repository in DockerHub", ""),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_pyhw =
+[
+('C',"cat app.py", data['cdsrc_pyhw01'], "# Python hello-world application"),
+('C',"cat Dockerfile", data['dkrfl_pyhw'], "# To package a Python hello-world application"),
+
+('C',"dk build -t python-helloworld .",
+"# build an image using the Dockerfile from the `lesson1/python-app` directory
+ (default current directory .)", ""),
+
+('C',"dk run -d -p 5111:5000 python-helloworld",
+"# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
+
+('C',"dk tag python-helloworld pixelpotato/python-helloworld:v1.0.0",
+"# tag the `python-helloworld` image, to be pushed
+ # in the `pixelpotato` repository, with the `python-helloworld` image name
+ # and version `v1.0.0`", ""),
+
+('C',"dk push pixelpotato/python-helloworld:v1.0.0",
+"# push the `python-helloworld` application in version v1.0.0
+ # to the `pixelpotato` repository in DockerHub", ""),
+
+('C', "dk login", "# login the user dockerhub account", "# login the user dockerhub account"),
+('C', "dk logs container_id", "# show logs of the specified container", "# show logs of the specified container"),
+('C', "dk images", "# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
+('C', "dk ps","# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
+('C', "dk pull", "# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds = {
+    'cmds_pyhw'             : cmds_pyhw,
+    'cmds_gohw'             : cmds_gohw,
+    'cmds_vagrant'          : cmds_vagrant,
+    'cmds_k3s2'             : cmds_k3s2,
+    'cmds_appdpl01'         : cmds_appdpl01,
+    'cmds_appdpldemo_01'    : cmds_appdpldemo_01,
+    'cmds_appdpldemo_02'    : cmds_appdpldemo_02,
+    'cmds_appdpl_svc_01'    : cmds_appdpl_svc_01,
+    'cmds_appcfg_cm_sec_01' : cmds_appcfg_cm_sec_01,
+    'cmds_appcfg_ns_01'     : cmds_appcfg_ns_01,
+    'cmds_appcfg_exo22'     : cmds_appcfg_exo22,
+    'cmds_manifests_01'     : cmds_manifests_01,
+    'cmds_manifests_02'     : cmds_manifests_02,
+    'cmds_manifests_03'     : cmds_manifests_03,
+    'cmds_ci_01'            : cmds_ci_01 ,
+    'cmds_ci_02'            : cmds_ci_02,
+    'cmds_cd_01'            : cmds_cd_01,
+    'cmds_cd_appdpl_01'     : cmds_cd_appdpl_01,
+    'cmds_cd_exosol'        : cmds_cd_exosol,
+    'cmds_cm_helm_01'       : cmds_cm_helm_01,
+    'cmds_cm_helm_exosol_01': cmds_cm_helm_exosol_01,
+}
+%}
