@@ -1,5 +1,7 @@
 # python
 from os.path import abspath, join as join_path, pardir
+import git
+
 
 # 3rd party:
 from flask import Flask
@@ -20,6 +22,19 @@ app = Flask(
 @app.route("/", methods=['GET'])
 def index():
     return render_template("index.html")  #tree01
+
+# ===========================================================================
+# webhook
+@app.route("/update_server", methods=['POST'])
+def webhook():
+    def callGitOriginPul():                   #import os
+        repo = git.Repo('')
+        origin = repo.remotes.origin
+        origin.pull()                         #os.system('/var/www/aliben_pythonanywhere_com_wsgi.py')
+        return "Updated site version successfully"
+
+    msg =  callGitOriginPul() #if request.method == 'POST' else 'Wrong event type'
+    return msg, 200 #HttpResponse(msg, status=200 if request.method == "POST" else 400)
 
 # ==================================================================================================
 #
