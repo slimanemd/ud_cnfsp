@@ -28,10 +28,12 @@ def index():
 @app.route("/update_server", methods=['POST'])
 def webhook():
     def callGitOriginPul():                   #import os
-        repo = git.Repo('')
-        origin = repo.remotes.origin
-        origin.pull()                         #os.system('/var/www/aliben_pythonanywhere_com_wsgi.py')
-        return "Updated site version successfully it is a test"
+        print(abspath(__file__))
+        repo = git.Repo('/home/slimanemd/udcnf')
+        #origin = repo.remotes.origin
+        #origin.pull()                         #os.system('/var/www/aliben_pythonanywhere_com_wsgi.py')
+        repo.pull('origin', 'main')
+        return "Updated site version successfully"
 
     msg =  callGitOriginPul() #if request.method == 'POST' else 'Wrong event type'
     return msg, 200 #HttpResponse(msg, status=200 if request.method == "POST" else 400)
