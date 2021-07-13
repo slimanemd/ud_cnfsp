@@ -33,7 +33,7 @@ def webhook():
         #origin = repo.remotes.origin
         #origin.pull()                         #os.system('/var/www/aliben_pythonanywhere_com_wsgi.py')
         #repo.pull('origin', 'main')
-        git.cmd.Git().pull('https://github.com/slimanemd/ud_cnfsp', 'main')
+        git.cmd.Git().pull('origin', 'main')
         return "Updated site version successfully"
 
     msg =  callGitOriginPul() #if request.method == 'POST' else 'Wrong event type'
