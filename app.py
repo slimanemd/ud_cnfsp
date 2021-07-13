@@ -31,7 +31,7 @@ def webhook():
         print(abspath(__file__))
         repo =  git.Repo('/home/slimanemd/udcnf')
         repo.remotes.origin.pull('main')
-        return "Updated site version successfully"
+        return "Updated site version successfully xxxxxxxxxxxxx"
 
     msg =  callGitOriginPul() #if request.method == 'POST' else 'Wrong event type'
     return msg, 200 #HttpResponse(msg, status=200 if request.method == "POST" else 400)
