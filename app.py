@@ -29,10 +29,11 @@ def index():
 def webhook():
     def callGitOriginPul():                   #import os
         print(abspath(__file__))
-        repo = git.Repo('/home/slimanemd/udcnf')
+        #repo = git.Repo('/home/slimanemd/udcnf')
         #origin = repo.remotes.origin
         #origin.pull()                         #os.system('/var/www/aliben_pythonanywhere_com_wsgi.py')
-        repo.pull('origin', 'main')
+        #repo.pull('origin', 'main')
+        git.cmd.Git().pull('https://github.com/slimanemd/ud_cnfsp', 'main')
         return "Updated site version successfully"
 
     msg =  callGitOriginPul() #if request.method == 'POST' else 'Wrong event type'
