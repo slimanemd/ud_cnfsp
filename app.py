@@ -31,7 +31,7 @@ def webhook():
         repo = git.Repo('')
         origin = repo.remotes.origin
         origin.pull()                         #os.system('/var/www/aliben_pythonanywhere_com_wsgi.py')
-        return "Updated site version successfully"
+        return "Updated site version successfully it is a test"
 
     msg =  callGitOriginPul() #if request.method == 'POST' else 'Wrong event type'
     return msg, 200 #HttpResponse(msg, status=200 if request.method == "POST" else 400)
