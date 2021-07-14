@@ -51,7 +51,7 @@ def webhook():
     app_loader = "/var/www/slimanemd_pythonanywhere_com_wsgi.py"
     os.system("touch " + app_loader)
 
-    msg = "Updated site version successfully"
+    msg = "Updated site version successfully oh"
     return msg, 200
 
 # ==================================================================================================
