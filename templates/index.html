@@ -1,4 +1,4 @@
-{% from 'data/data_cnfsp.html' import cmds, lessons %}
+{% from 'data/data_' + data + '.html' import cmds, lessons %}
 
 <!-- prompt  -->
 {% set prompt = '$ ' %}
@@ -40,14 +40,13 @@
 {% endmacro %}
 
 <!-- main body  -->
-{% macro mc_body2() %}
-    <center> <h2>Cloud Native Fundamentals Scholarship Program <br>
-                 Nanodegree Program - Udacity Suse</h2></center>
+{% macro mc_body2(p_title, p_subtitle,  p_lessons) %}
+    <center> <h2>{{ p_title }} <br> {{ p_subtitle }} </h2></center>
 
-    {% for key in lessons.keys() %}
+    {% for key in p_lessons.keys() %}
             <br><br><br>
-            <h2><b>{{ lessons[key]['title'] }}</b></h2>
-            {% for item in lessons[key]['sections'] %}
+            <h2><b>{{ p_lessons[key]['title'] }}</b></h2>
+            {% for item in p_lessons[key]['sections'] %}
                 <br>
                 <h3>{{ item['title'] }}</h3>
                     {% for e in item['labs'] %}
@@ -79,7 +78,12 @@
         </style>
     </head>
     <body>
-        {{ mc_body2() }}
+        {% if data == "cnfsp" %}
+            {{ mc_body2("Cloud Native Fundamentals Scholarship Program", "Nanodegree Program - Suse/Udacity",
+                        lessons) }}
+        {% else %}
+            {{ mc_body2("GitHub commands", "Git action & GitOps", lessons) }}
+        {% endif %}
 
         <!-- ================================================================= -->
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>

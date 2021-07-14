@@ -23,7 +23,14 @@ app = Flask(
 
 @app.route("/", methods=['GET'])
 def index():
-    return render_template("index.html")
+    return render_template("index.html", data='cnfsp')
+
+# ==================================================================================================
+# home
+
+@app.route("/git", methods=['GET'])
+def git():
+    return render_template("index.html", data='git')
 
 # ===========================================================================
 # webhook
