@@ -36,7 +36,7 @@ def git():
 # git
 
 @app.route("/divers", methods=['GET'])
-def git():
+def divers():
     return render_template("divers.html", data='divers')
 
 # ===========================================================================
