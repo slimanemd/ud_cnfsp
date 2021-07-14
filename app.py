@@ -29,7 +29,7 @@ def index():
 # git
 
 @app.route("/git", methods=['GET'])
-def git():
+def getgit():
     return render_template("index.html", data='git')
 
 # ==================================================================================================
