@@ -32,7 +32,7 @@ def index():
 def webhook():
     repo = git.Repo('/home/slimanemd/udcnf')
     repo.remotes.origin.pull('main')
-    msg = "Updated site version successfully"
+    msg = "Updated site version successfully xxxxxxxxxxxxxxx"
     return msg, 200
 
 # ==================================================================================================
