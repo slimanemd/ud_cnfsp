@@ -23,5 +23,5 @@ def touch2():
     os.system("touch " + app_loader)
 
 
-# webhook()
-touch2()
+webhook()
+#touch2()
