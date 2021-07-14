@@ -1,6 +1,7 @@
 # python
 from os.path import abspath, join as join_path, pardir
 import git
+import os
 
 # 3rd party:
 from flask import Flask
@@ -32,6 +33,10 @@ def index():
 def webhook():
     repo = git.Repo('/home/slimanemd/udcnf')
     repo.remotes.origin.pull('main')
+
+    app_loader = "/var/www/slimanemd_pythonanywhere_com_wsgi.py"
+    os.system("touch " + app_loader)
+
     msg = "Updated site version successfully xxxxxxxxxxxxxxx"
     return msg, 200
 
