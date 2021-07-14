@@ -37,7 +37,7 @@ def git():
 
 @app.route("/divers", methods=['GET'])
 def divers():
-    return render_template("divers.html", data='divers')
+    return render_template("index.html", data='divers')
 
 # ===========================================================================
 # webhook
