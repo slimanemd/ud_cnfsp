@@ -17,5 +17,11 @@ def webhook():
     msg =  callGitOriginPul()
     print(msg)
 
-webhook()
+def touch2():
+    import os
+    app_loader = "/var/www/slimanemd_pythonanywhere_com_wsgi.py"
+    os.system("touch " + app_loader)
 
+
+# webhook()
+touch2()
