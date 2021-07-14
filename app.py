@@ -26,11 +26,18 @@ def index():
     return render_template("index.html", data='cnfsp')
 
 # ==================================================================================================
-# home
+# git
 
 @app.route("/git", methods=['GET'])
 def git():
     return render_template("index.html", data='git')
+
+# ==================================================================================================
+# git
+
+@app.route("/divers", methods=['GET'])
+def git():
+    return render_template("divers.html", data='divers')
 
 # ===========================================================================
 # webhook
