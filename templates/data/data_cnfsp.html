@@ -12,9 +12,9 @@ app = Flask(__name__)
 @app.route('/status')
 def healthcheck():
     response = app.response_class(
-            response=json.dumps({'result':'OK - healthy'}),
-            status=200,
-            mimetype='application/json'
+        response=json.dumps({'result':'OK - healthy'}),
+        status=200,
+        mimetype='application/json'
     )
 
     app.logger.info('Status request successfull')
@@ -23,9 +23,9 @@ def healthcheck():
 @app.route('/metrics')
 def metrics():
     response = app.response_class(
-            response=json.dumps({'status':'success','code':0,'data':{'UserCount':140,'UserCountActive':23}}),
-            status=200,
-            mimetype='application/json'
+        response=json.dumps({'status':'success','code':0,'data':{'UserCount':140,'UserCountActive':23}}),
+        status=200,
+        mimetype='application/json'
     )
 
     app.logger.info('Metrics request successfull')
@@ -45,318 +45,301 @@ if __name__ == '__main__':
 %}
 
 <!-- =============================================================== -->
+{% set dkrfl_pyhw = '
+# set the base image. Since we re running
+# a Python application a Python base image is used
+FROM python:3.8
+
+# set a key-value label for the Docker image
+LABEL maintainer="Katie Gamanji"
+
+# copy files from the host to the container filesystem.
+# For example, all the files in the current directory
+# to the  `/app` directory in the container
+COPY . /app
+
+# defines the working directory within the container
+WORKDIR /app
+
+# run commands within the container.
+# For example, invoke a pip command
+# to install dependencies defined in the requirements.txt file.
+RUN pip install -r requirements.txt
+
+# provide a command to run on container start.
+# For example, start the `app.py` application.
+CMD [ "python", "app.py" ]'
+%}
+
+<!-- =============================================================== -->
 {% set cdsrc_gohw01 = '
-    # Application version: v1.0.0
-    # port exposed: 6111
-    package main
+# Application version: v1.0.0
+# port exposed: 6111
+package main
 
-    import (
-        "fmt"
-        "net/http"
-    )
+import (
+    "fmt",
+    "net/http"
+)
 
-    func helloWorld(w http.ResponseWriter, r *http.Request){
-        fmt.Fprintf(w, "Hello World")
-    }
+func helloWorld(w http.ResponseWriter, r *http.Request){
+    fmt.Fprintf(w, "Hello World")
+}
 
-    func main() {
-        http.HandleFunc("/", helloWorld)
-        http.ListenAndServe(":6111", nil)
-    }'
+func main() {
+    http.HandleFunc("/", helloWorld)
+    http.ListenAndServe(":6111", nil)
+}'
 %}
 
 <!-- =============================================================== -->
 {% set cdsrc_gohw02 = '
-    # Application version: v2.0.0
-    # port exposed: 6111
-    package main
+# Application version: v2.0.0
+# port exposed: 6111
+package main
 
-    import (
-        "fmt"
-        "net/http"
-    )
+import (
+    "fmt"
+    "net/http"
+)
 
-    func helloWorld(w http.ResponseWriter, r *http.Request){
-        fmt.Fprintf(w, "Hello World vesion 2")
-    }
+func helloWorld(w http.ResponseWriter, r *http.Request){
+    fmt.Fprintf(w, "Hello World vesion 2")
+}
 
-    func main() {
-        http.HandleFunc("/", helloWorld)
-        http.ListenAndServe(":6111", nil)
-    }'
+func main() {
+    http.HandleFunc("/", helloWorld)
+    http.ListenAndServe(":6111", nil)
+}'
+%}
+
+<!-- =============================================================== -->
+{% set dkrfl_gohw = '
+FROM golang:alpine
+WORKDIR /go/src/app
+ADD . .
+RUN go build  -o helloworld
+EXPOSE 6111
+CMD ["./helloworld"]'
+%}
+
+
+<!-- =============================================================== -->
+{% set vgrfl001_woc = '
+# set up the default terminal
+ENV["TERM"]="linux"
+Vagrant.configure("2") do |config|
+    # set the image for the vagrant box
+    config.vm.box = "opensuse/Leap-15.2.x86_64"
+    ## Set the image version
+    @ config.vm.box_version = "15.2.31.212"
+    # st the static IP for the vagrant box
+    config.vm.network "private_network", ip: "192.168.50.4"
+    # consifure the parameters for VirtualBox provider
+    config.vm.provider "virtualbox" do |vb|
+        vb.memory = "4096"
+        vb.cpus = 4
+        vb.customize ["modifyvm", :id, "--ioapic", "on"]
+    end
+end'
 %}
 
 <!-- =============================================================== -->
 {% set k3scfgfl_woc = 'apiVersion: v1
-    clusters:                                 # define the cluster metadata
+# define the cluster metadata
+clusters:
     - cluster:
-      certificate-authority-data: {{ CA }}
-      server: https://127.0.0.1:63668
+        certificate-authority-data: {{ CA }}
+        server: https://127.0.0.1:63668
     name: udacity-cluster
-    users:                                    # define the user details
-    - name: udacity-user                      # user authenticates using client/key certificates
+# define the user details
+users:
+    # user authenticates using client/key certificates
+    - name: udacity-user
     user:
-      client-certificate-data: {{ CERT }}
-      client-key-data: {{ KEY }}
-    - name: green-user                        # `green-user` user authenticates using a token
+        client-certificate-data: {{ CERT }}
+        client-key-data: {{ KEY }}
+    # `green-user` user authenticates using a token
+    - name: green-user
     user:
-      token: {{ TOKEN }}
-    contexts:                                 # define the contexts
+        token: {{ TOKEN }}
+# define the contexts
+contexts:
     - context:
-      cluster: udacity-cluster
-      user: udacity-user
+    cluster: udacity-cluster
+    user: udacity-user
     name: udacity-context
-    current-context: udacity-context          # set the current context'
+# set the current context
+current-context: udacity-context'
 %}
 
 <!-- =============================================================== -->
-{% set vgrfl_gohw = '
-    # set up the default terminal
-    ENV["TERM"]="linux"
-
-    Vagrant.configure("2") do |config|
-
-        # set the image for the vagrant box
-        config.vm.box = "opensuse/Leap-15.2.x86_64"
-        ## Set the image version
-        # config.vm.box_version = "15.2.31.212"
-
-        # st the static IP for the vagrant box
-        config.vm.network "private_network", ip: "192.168.50.4"
-
-        # consifure the parameters for VirtualBox provider
-        config.vm.provider "virtualbox" do |vb|
-        vb.memory = "4096"
-        vb.cpus = 4
-        vb.customize ["modifyvm", :id, "--ioapic", "on"]
-        end
-    end'
-%}
-
-<!-- =============================================================== -->
-{% set vgrfl001_woc = '
-    ENV["TERM"]="linux"                                              # set up the default terminal
-    Vagrant.configure("2") do |config|
-        config.vm.box = "opensuse/Leap-15.2.x86_64"                  # set the image for the vagrant box
-        # config.vm.box_version = "15.2.31.212"                      ## Set the image version
-        config.vm.network "private_network", ip: "192.168.50.4"      # st the static IP for the vagrant box
-        config.vm.provider "virtualbox" do |vb|                      # consifure the parameters for VirtualBox provider
-            vb.memory = "4096"
-            vb.cpus = 4
-            vb.customize ["modifyvm", :id, "--ioapic", "on"]
-        end
-    end'
-%}
-
-<!-- =============================================================== -->
-{% set dkrfl_pyhw = '
-    # set the base image. Since we re running
-    # a Python application a Python base image is used
-    FROM python:3.8
-
-    # set a key-value label for the Docker image
-    LABEL maintainer="Katie Gamanji"
-
-    # copy files from the host to the container filesystem.
-    # For example, all the files in the current directory
-    # to the  `/app` directory in the container
-    COPY . /app
-
-    #  defines the working directory within the container
-    WORKDIR /app
-
-    # run commands within the container.
-    # For example, invoke a pip command
-    # to install dependencies defined in the requirements.txt file.
-    RUN pip install -r requirements.txt
-
-    # provide a command to run on container start.
-    # For example, start the `app.py` application.
-    CMD [ "python", "app.py" ]'
-%}
-
-<!-- =============================================================== -->
-{% set dkrfl_pyhw_woc = '
-    FROM python:3.8
-    LABEL maintainer="Katie Gamanji"
-    COPY . /app
-    WORKDIR /app
-    RUN pip install -r requirements.txt
-    CMD [ "python", "app.py" ]'
-%}
-
-<!-- =============================================================== -->
-{% set dkrfl_gohw_woc = '
-    FROM golang:alpine
-    WORKDIR /go/src/app
-    ADD . .
-    RUN go build  -o helloworld
-    EXPOSE 6111
-    CMD ["./helloworld"]'
-%}
-
-<!-- =============================================================== -->
-{% set outs= {
+{% set get_po_01= {
 'get_po_01':"
-    NAME                             READY   STATUS             RESTARTS   AGE
-    go-helloworld-fcd468f98-d7qmm    1/1     Running            0          4h37m
-    go-helloworld-85645f7987-86c4x   0/1     ImagePullBackOff   0          32m
-    mytest01                         0/1     ErrImagePull       0          12s",
+NAME                             READY   STATUS             RESTARTS   AGE
+go-helloworld-fcd468f98-d7qmm    1/1     Running            0          4h37m
+go-helloworld-85645f7987-86c4x   0/1     ImagePullBackOff   0          32m
+mytest01                         0/1     ErrImagePull       0          12s",
 }
 %}
 
 <!-- =============================================================== -->
 {% set yaml00 =
 {
-   'vrs':
+'vrs':
 '## Set the API endpoint used to create the Deployment resource.
 apiVersion: apps/v1',
-   'kind' :
+
+'kind' :
 '## Define the type of the resource.
 kind: Deployment',
-   'metadata' :
+
+'metadata' :
 '## Set the parameters that make the object identifiable, such as its name, namespace, and labels.
 metadata:
-  annotations:
-  labels:
-    app: go-helloworld
-  name: go-helloworld
-  namespace: default',
+    annotations:
+    labels:
+        app: go-helloworld
+        name: go-helloworld
+        namespace: default',
+
 'spec':
 '## Define the desired configuration for the Deployment resource.
 spec:
-  ## Set the number of replicas.
-  ## This will create a ReplicaSet that will manage 3 pods of the Go hello-world application.
-  replicas: 3
-  ## Identify the pods managed by this Deployment using the following selectors.
-  ## In this case, all pods with the label `go-helloworld`.
-  selector:
-    matchLabels:
-      app: go-helloworld
-  ## Set the RollingOut strategy for the Deployment.
-  ## For example, roll out only 25% of the new pods at a time.
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
+    ## Set the number of replicas.
+    ## This will create a ReplicaSet that will manage 3 pods of the Go hello-world application.
+    replicas: 3
+    ## Identify the pods managed by this Deployment using the following selectors.
+    ## In this case, all pods with the label `go-helloworld`.
+    selector:
+        matchLabels:
+            app: go-helloworld
+    ## Set the RollingOut strategy for the Deployment.
+    ## For example, roll out only 25% of the new pods at a time.
+    strategy:
+        rollingUpdate:
+            maxSurge: 25%
+            maxUnavailable: 25%
     type: RollingUpdate
-  ## Set the configuration for the pods.
-  template:
-    ## Define the identifiable metadata for the pods.
-    ## For example, all pods should have the label `go-helloworld`
-    metadata:
-      labels:
-        app: go-helloworld
-    ## Define the desired state of the pod configuration.
-    spec:
-      containers:
-        ## Set the image to be executed inside the container and image pull policy
-        ## In this case, run the `go-helloworld` application in version v2.0.0 and
-        ## only pull the image if it s not available on the current host.
-      - image: pixelpotato/go-helloworld:v2.0.0
-        imagePullPolicy: IfNotPresent
-        name: go-helloworld
-        ## Expose the port the container is listening on.
-        ## For example, exposing the application port 6112 via TCP.
-        ports:
-        - containerPort: 6112
-          protocol: TCP
-        ## Define the rules for the liveness probes.
-        ## For example, verify the application on the main route `/`,
-        ## on application port 6112. If the application is not responsive, then the pod will be restarted automatically.
-        livenessProbe:
-           httpGet:
-             path: /
-             port: 6112
-        ## Define the rules for the readiness probes.
-        ## For example, verify the application on the main route `/`,
-        ## on application port 6112. If the application is responsive, then traffic will be sent to this pod.
-        readinessProbe:
-           httpGet:
-             path: /
-             port: 6112
-        ## Set the resource requests and limits for an application.
-        resources:
-        ## The resource requests guarantees that the desired amount
-        ## CPU and memory is allocated for a pod. In this example,
-        ## the pod will be allocated with 64 Mebibytes and 250 miliCPUs.
-          requests:
-            memory: "64Mi"
-            cpu: "250m"
-        ## The resource limits ensure that the application is not consuming
-        ## more than the specified CPU and memory values. In this example,
-        ## the pod will not surpass 128 Mebibytes and 500 miliCPUs.
-          limits:
-            memory: "128Mi"
-            cpu: "500m"'
+    ## Set the configuration for the pods.
+    template:
+        ## Define the identifiable metadata for the pods.
+        ## For example, all pods should have the label `go-helloworld`
+        metadata:
+            labels:
+                app: go-helloworld
+        ## Define the desired state of the pod configuration.
+        spec:
+            containers:
+                ## Set the image to be executed inside the container and image pull policy
+                ## In this case, run the `go-helloworld` application in version v2.0.0 and
+                ## only pull the image if it s not available on the current host.
+                - image: pixelpotato/go-helloworld:v2.0.0
+                imagePullPolicy: IfNotPresent
+                name: go-helloworld
+                ## Expose the port the container is listening on.
+                ## For example, exposing the application port 6112 via TCP.
+                ports:
+                    - containerPort: 6112
+                    protocol: TCP
+                ## Define the rules for the liveness probes.
+                ## For example, verify the application on the main route `/`,
+                ## on application port 6112. If the application is not responsive, then the pod will be restarted automatically.
+            livenessProbe:
+                httpGet:
+                    path: /
+                    port: 6112
+            ## Define the rules for the readiness probes.
+            ## For example, verify the application on the main route `/`,
+            ## on application port 6112. If the application is responsive, then traffic will be sent to this pod.
+            readinessProbe:
+                httpGet:
+                    path: /
+                    port: 6112
+            ## Set the resource requests and limits for an application.
+            resources:
+                ## The resource requests guarantees that the desired amount
+                ## CPU and memory is allocated for a pod. In this example,
+                ## the pod will be allocated with 64 Mebibytes and 250 miliCPUs.
+                requests:
+                    memory: "64Mi"
+                    cpu: "250m"
+            ## The resource limits ensure that the application is not consuming
+            ## more than the specified CPU and memory values. In this example,
+            ## the pod will not surpass 128 Mebibytes and 500 miliCPUs.
+                limits:
+                    memory: "128Mi"
+                    cpu: "500m"'
 }
 %}
 
 <!-- =============================================================== -->
 {% set yaml01 =
 {
-        'vrs':'apps/v1',
-        'kind' : 'Deployment',
-        'metadata' : 'annotations:
-                        deployment.kubernetes.io/revision: "3"
-                      creationTimestamp: "2021-06-22T15:14:36Z"
-                      generation: 4
-                      labels:
-                        app: go-helloworld
-                      name: go-helloworld
-                      namespace: default
-                      resourceVersion: "12259"
-                      uid: 0fd9d7a6-7d94-43d9-bbd4-ea03ec9e1a85',
-        'spec': 'progressDeadlineSeconds: 600
-                      replicas: 1
-                      revisionHistoryLimit: 10
-                      selector:
-                        matchLabels:
-                          app: go-helloworld
-                      strategy:
-                        rollingUpdate:
-                          maxSurge: 25%
-                          maxUnavailable: 25%
-                        type: RollingUpdate
-                      template:
-                        metadata:
-                          creationTimestamp: null
-                          labels:
-                            app: go-helloworld
-                        spec:
-                          containers:
-                          - image: pixelpotato/go-helloworld:v2.0.0
-                            imagePullPolicy: IfNotPresent
-                            name: go-helloworld
-                            resources: {}
-                            terminationMessagePath: /dev/termination-log
-                            terminationMessagePolicy: File
-                          dnsPolicy: ClusterFirst
-                          restartPolicy: Always
-                          schedulerName: default-scheduler
-                          securityContext: {}
-                          terminationGracePeriodSeconds: 30
-                    status:
-                      availableReplicas: 1
-                      conditions:
-                      - lastTransitionTime: "2021-06-22T19:59:27Z"
-                        lastUpdateTime: "2021-06-22T19:59:27Z"
-                        message: Deployment has minimum availability.
-                        reason: MinimumReplicasAvailable
-                        status: "True"
-                        type: Available
-                      - lastTransitionTime: "2021-06-22T19:59:10Z"
-                        lastUpdateTime: "2021-06-22T20:01:00Z"
-                        message: ReplicaSet "go-helloworld-85645f7987" is progressing.
-                        reason: ReplicaSetUpdated
-                        status: "True"
-                        type: Progressing
-                      observedGeneration: 3
-                      readyReplicas: 1
-                      replicas: 2
-                      unavailableReplicas: 1
-                      updatedReplicas: 1
-'},
+'vrs':'apps/v1',
+'kind' : 'Deployment',
+'metadata' :
+'annotations:
+    deployment.kubernetes.io/revision: "3"
+    creationTimestamp: "2021-06-22T15:14:36Z"
+    generation: 4
+labels:
+    app: go-helloworld
+    name: go-helloworld
+    namespace: default
+    resourceVersion: "12259"
+    uid: 0fd9d7a6-7d94-43d9-bbd4-ea03ec9e1a85',
+'spec':
+'progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: go-helloworld
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: go-helloworld
+    spec:
+      containers:
+      - image: pixelpotato/go-helloworld:v2.0.0
+        imagePullPolicy: IfNotPresent
+        name: go-helloworld
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2021-06-22T19:59:27Z"
+    lastUpdateTime: "2021-06-22T19:59:27Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2021-06-22T19:59:10Z"
+    lastUpdateTime: "2021-06-22T20:01:00Z"
+    message: ReplicaSet "go-helloworld-85645f7987" is progressing.
+    reason: ReplicaSetUpdated
+    status: "True"
+    type: Progressing
+  observedGeneration: 3
+  readyReplicas: 1
+  replicas: 2
+  unavailableReplicas: 1
+  updatedReplicas: 1'
+},
 %}
 
 <!-- =============================================================== -->
@@ -411,38 +394,42 @@ on: [push]',
 <!-- =============================================================== -->
 {% set yaml04 = {
 'name': 'Docker Build and Push',
-'on': 'push:
+'on':
+'push:
     branches: [ master ]
-  pull_request:
+pull_request:
     branches: [ master ]',
 'jobs':'
-  build:                     # This workflow contains a single job called "build"
-    runs-on: ubuntu-latest   # The type of runner that the job will run on
-    steps:                   # Steps represent a sequence of tasks that will be executed as part of the job
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64
-          push: true
-          tags: {{ YOUR_DOCKERHUB_REPOSITORY }}/python-helloworld:latest'
+# This workflow contains a single job called "build"
+build:
+# The type of runner that the job will run on
+runs-on: ubuntu-latest
+# Steps represent a sequence of tasks that will be executed as part of the job
+steps:
+  -
+    name: Checkout
+    uses: actions/checkout@v2
+  -
+    name: Set up QEMU
+    uses: docker/setup-qemu-action@v1
+  -
+    name: Set up Docker Buildx
+    uses: docker/setup-buildx-action@v1
+  -
+    name: Login to DockerHub
+    uses: docker/login-action@v1
+    with:
+      username: ${{ secrets.DOCKERHUB_USERNAME }}
+      password: ${{ secrets.DOCKERHUB_TOKEN }}
+  -
+    name: Build and push
+    uses: docker/build-push-action@v2
+    with:
+      context: .
+      file: ./Dockerfile
+      platforms: linux/amd64
+      push: true
+      tags: {{ YOUR_DOCKERHUB_REPOSITORY }}/python-helloworld:latest'
 }
 %}
 
@@ -452,77 +439,79 @@ on: [push]',
 '## Define the type of the resource.
  apps/v1',
 'kind': 'Deployment',
-'metadata': " ## Set the parameters that make the object identifiable, such as its name, namespace, and labels.
-  annotations:
-  labels:
+'metadata':
+"## Set the parameters that make the object identifiable, such as its name, namespace, and labels.
+annotations:
+labels:
     app: go-helloworld
-  name: go-helloworld
-  namespace: default',
-'spec': ' ## Define the desired configuration for the Deployment resource.
-  ## Set the number of replicas.
-  ## This will create a ReplicaSet that will manage 3 pods of the Go hello-world application.
-  replicas: 3
-  ## Identify the pods managed by this Deployment using the following selectors.
-  ## In this case, all pods with the label `go-helloworld`.
-  selector:
+    name: go-helloworld
+    namespace: default',
+'spec':
+'## Define the desired configuration for the Deployment resource.
+## Set the number of replicas.
+## This will create a ReplicaSet that will manage 3 pods of the Go hello-world application.
+replicas: 3
+## Identify the pods managed by this Deployment using the following selectors.
+## In this case, all pods with the label `go-helloworld`.
+selector:
     matchLabels:
-      app: go-helloworld
-  ## Set the RollingOut strategy for the Deployment.
-  ## For example, roll out only 25% of the new pods at a time.
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
-  ## Set the configuration for the pods.
-  template:
-    ## Define the identifiable metadata for the pods.
-    ## For example, all pods should have the label `go-helloworld`
-    metadata:
-      labels:
         app: go-helloworld
-    ## Define the desired state of the pod configuration.
-    spec:
-      containers:
-        ## Set the image to be executed inside the container and image pull policy
-        ## In this case, run the `go-helloworld` application in version v2.0.0 and
-        ## only pull the image if it is not available on the current host.
-      - image: pixelpotato/go-helloworld:v2.0.0
-        imagePullPolicy: IfNotPresent
-        name: go-helloworld
-        ## Expose the port the container is listening on.
-        ## For example, exposing the application port 6112 via TCP.
-        ports:
-        - containerPort: 6112
-          protocol: TCP
-        ## Define the rules for the liveness probes.
-        ## For example, verify the application on the main route `/`,
-        ## on application port 6112. If the application is not responsive, then the pod will be restarted automatically.
-        livenessProbe:
-           httpGet:
-             path: /
-             port: 6112
-        ## Define the rules for the readiness probes.
-        ## For example, verify the application on the main route `/`,
-        ## on application port 6112. If the application is responsive, then traffic will be sent to this pod.
-        readinessProbe:
-           httpGet:
-             path: /
-             port: 6112
-        ## Set the resource requests and limits for an application.
-        resources:
-        ## The resource requests guarantees that the desired amount
-        ## CPU and memory is allocated for a pod. In this example,
-        ## the pod will be allocated with 64 Mebibytes and 250 miliCPUs.
-          requests:
-            memory: '64Mi'
-            cpu: '250m'
-        ## The resource limits ensure that the application is not consuming
-        ## more than the specified CPU and memory values. In this example,
-        ## the pod will not surpass 128 Mebibytes and 500 miliCPUs.
-          limits:
-            memory: '128Mi'
-            cpu: '500m'"
+    ## Set the RollingOut strategy for the Deployment.
+    ## For example, roll out only 25% of the new pods at a time.
+    strategy:
+        rollingUpdate:
+            maxSurge: 25%
+            maxUnavailable: 25%
+            type: RollingUpdate
+    ## Set the configuration for the pods.
+    template:
+        ## Define the identifiable metadata for the pods.
+        ## For example, all pods should have the label `go-helloworld`
+        metadata:
+            labels:
+                app: go-helloworld
+        ## Define the desired state of the pod configuration.
+        spec:
+            containers:
+            ## Set the image to be executed inside the container and image pull policy
+            ## In this case, run the `go-helloworld` application in version v2.0.0 and
+            ## only pull the image if it is not available on the current host.
+            - image: pixelpotato/go-helloworld:v2.0.0
+                imagePullPolicy: IfNotPresent
+                name: go-helloworld
+                ## Expose the port the container is listening on.
+                ## For example, exposing the application port 6112 via TCP.
+                ports:
+                    - containerPort: 6112
+                    protocol: TCP
+            ## Define the rules for the liveness probes.
+            ## For example, verify the application on the main route `/`,
+            ## on application port 6112. If the application is not responsive, then the pod will be restarted automatically.
+            livenessProbe:
+                httpGet:
+                    path: /
+                    port: 6112
+            ## Define the rules for the readiness probes.
+            ## For example, verify the application on the main route `/`,
+            ## on application port 6112. If the application is responsive, then traffic will be sent to this pod.
+            readinessProbe:
+                httpGet:
+                    path: /
+                    port: 6112
+            ## Set the resource requests and limits for an application.
+                resources:
+            ## The resource requests guarantees that the desired amount
+            ## CPU and memory is allocated for a pod. In this example,
+            ## the pod will be allocated with 64 Mebibytes and 250 miliCPUs.
+            requests:
+                memory: '64Mi'
+                cpu: '250m'
+            ## The resource limits ensure that the application is not consuming
+            ## more than the specified CPU and memory values. In this example,
+            ## the pod will not surpass 128 Mebibytes and 500 miliCPUs.
+            limits:
+                memory: '128Mi'
+                cpu: '500m'"
 }
 %}
 
@@ -535,26 +524,26 @@ v1',
 '## Define the type of the resource.
 Service',
 'metadata' :
-' ## Set the parameters that make the object identifiable, such as its name, namespace, and labels.
-  labels:
+'## Set the parameters that make the object identifiable, such as its name, namespace, and labels.
+labels:
     app: go-helloworld
-  name: go-helloworld
-  namespace: default
+    name: go-helloworld
+    namespace: default
 ## Define the desired configuration for the Service resource.
 spec:
-  ## Define the ports that the service should serve on.
-  ## For example, the service is exposed on port 8111, and
-  ## directs the traffic to the pods on port 6112, using TCP.
-  ports:
-  - port: 8111
-    protocol: TCP
-    targetPort: 6112
-  ## Identify the pods managed by this Service using the following selectors.
-  ## In this case, all pods with the label `go-helloworld`.
-  selector:
-    app: go-helloworld
-  ## Define the Service type, here set to ClusterIP.
-  type: ClusterIP'
+    ## Define the ports that the service should serve on.
+    ## For example, the service is exposed on port 8111, and
+    ## directs the traffic to the pods on port 6112, using TCP.
+    ports:
+        - port: 8111
+        protocol: TCP
+        targetPort: 6112
+    ## Identify the pods managed by this Service using the following selectors.
+    ## In this case, all pods with the label `go-helloworld`.
+    selector:
+        app: go-helloworld
+    ## Define the Service type, here set to ClusterIP.
+        type: ClusterIP'
 }
 %}
 
@@ -570,39 +559,39 @@ on: [push]
 
 ## List the steps to be executed by the workflow
 jobs:
-  ## Set the name of the job
-  build:
-    ## Configure the operating system the workflow should run on.
-    ## In this case, the job on Ubuntu. Additionally, set a the job
-    ## to execute on different Python versions
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
-    ## Define a sequence of steps to be executed
-    steps:
-      ## Use the public `checkout` action  in version v2
-      ## to checkout the existing code in the repository
-    - uses: actions/checkout@v2
-      ## Use the public `setup-python` actoin  in version v2
-      ## to install python on the Ubuntu based environment.
-      ## Additionally, it ensures to loop through all
-      ## the defined Python versions.
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    ## Install all necessary dependecies .
-    ## For example, pytest and any defined packages within the requirements.txt file.
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install  pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    ## Run all pytests by inovking the `pytest command`
-    - name: Test with pytest
-      run: |
-        pytest'
+    ## Set the name of the job
+    build:
+        ## Configure the operating system the workflow should run on.
+        ## In this case, the job on Ubuntu. Additionally, set a the job
+        ## to execute on different Python versions
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+        ## Define a sequence of steps to be executed
+        steps:
+            ## Use the public `checkout` action  in version v2
+            ## to checkout the existing code in the repository
+            - uses: actions/checkout@v2
+            ## Use the public `setup-python` actoin  in version v2
+            ## to install python on the Ubuntu based environment.
+            ## Additionally, it ensures to loop through all
+            ## the defined Python versions.
+            - name: Set up Python ${{ matrix.python-version }}
+            uses: actions/setup-python@v2
+            with:
+                python-version: ${{ matrix.python-version }}
+            ## Install all necessary dependecies .
+            ## For example, pytest and any defined packages within the requirements.txt file.
+            - name: Install dependencies
+            run: |
+                python -m pip install --upgrade pip
+                pip install  pytest
+                if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+            ## Run all pytests by inovking the `pytest command`
+            - name: Test with pytest
+            run: |
+                pytest'
 %}
 
 <!-- =============================================================== -->
@@ -745,6 +734,35 @@ spec:
 %}
 
 
+{% set yml_dpl_a001 =
+"apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: python-helloworld
+  name: python-helloworld
+  namespace: {{ .Values.namespace.name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: python-helloworld
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: python-helloworld
+    spec:
+      containers:
+      - image: <b>{{ .Values.image.repository }}:{{ .Values.image.tag }}</b>
+        imagePullPolicy: IfNotPresent
+        name: python-helloworld"
+%}
+
 <!-- =============================================================== -->
 {% set data =
 {
@@ -763,82 +781,19 @@ spec:
 'get_ns_01'             : get_ns_01,
 'cm-nginx-staging-yaml' : cm_nginx_staging_yaml,
 'cm-nginx-prod-yaml'    : cm_nginx_prod_yaml,
-'dkrfl_pyhw'            : dkrfl_pyhw_woc,
-'dkrfl_gohw'            : dkrfl_gohw_woc,
+'dkrfl_pyhw'            : dkrfl_pyhw,
+'dkrfl_gohw'            : dkrfl_gohw,
 'vgrfl001_woc'          : vgrfl001_woc,
 'k3scfgfl_woc'          : k3scfgfl_woc,
 'cdsrc_pyhw01'          : cdsrc_pyhw01,
 'cdsrc_gohw01'          : cdsrc_gohw01,
 'cdsrc_gohw02'          : cdsrc_gohw02,
 'yaml_dpl01'            : yaml_dpl01,
-'outs'                  : outs,
+'get_po_01'             : get_po_01,
 }
 %}
 
 <!-- =============================================================== -->
-{% set lessons = {
-    'Kubernetes': {
-        'title': 'Lesson 3: Container Orchestration with Kubernetes',
-        'sections':[
-            {
-                'title': 'A- Docker for Application packaging',
-                'labs':[
-                    (0,"Application Developent & Packaging(Docker) ['Python hello world', 'v1.0.0']", 'cmds_pyhw'),
-                    (1,"Application Developent & Packaging(Docker) ['Go hello world', 'v1.0.0']", 'cmds_gohw')
-                    ]
-            },
-            {
-                'title': 'B- Container Orchestration with Kubernetes',
-                'labs':[
-                    (2,"Vagrant", 'cmds_vagrant'),
-                    (3,"Kubernetes K3S", 'cmds_k3s2'),
-                    (4,"Application Deployment", 'cmds_appdpl01'),
-                    (5,"Application Development Demo go-helloworld v1.0.0", 'cmds_appdpldemo_01'),
-                    (6,"Application Development Demo go-helloworld v2.0.0", 'cmds_appdpldemo_02'),]
-            },
-            {
-                'title': 'C- Kubernetes Resources',
-                'labs':[
-                    (7,"Application Reachability Services + Ingress", 'cmds_appdpl_svc_01'),
-                    (8,"Application Configuration And Context", 'cmds_appcfg_cm_sec_01'),
-                    (9,"Demo Application Context Namespace", 'cmds_appcfg_ns_01'),
-                    (10,"Kubernetes resources exercice solution", 'cmds_appcfg_exo22'),]
-            },
-            {
-                'title': 'D- Declarative Kubernetes Manifests',
-                'labs':[
-                    (11,"Kubernetes resources exercice solution", 'cmds_manifests_01'),
-                    (12,"Kubernetes resources exercice solution", 'cmds_manifests_02'),
-                    (13,"Solution: Declarative Kubernetes Manifests", 'cmds_manifests_03'),]
-            },
-        ]
-    },
-    'ci_cd':{
-        'title': 'Lesson 5: CI/CD with Cloud Native Tooling',
-        'sections': [
-            {
-                'title': 'Continuous Intehgration',
-                'labs': [
-                    (14,"The CI Fundamentals", 'cmds_ci_01'),
-                    (15,"Exercise: Continuous Application Deployment", 'cmds_ci_02'),]
-            },
-            {
-                'title': 'Continuous Delevry',
-                'labs': [
-                    (16,"The CD Fundamentals", 'cmds_cd_01'),
-                    (17,"The Application deployment", 'cmds_cd_appdpl_01'),
-                    (18,"Solution: The CD Fundamentals Exercise", 'cmds_cd_exosol'),]
-            },
-            {
-                'title': 'Configuration Managers',
-                'labs': [
-                    (19,"Helm", 'cmds_cm_helm_01'),
-                    (20,"Helm Exo Solution", 'cmds_cm_helm_exosol_01'),]
-            }
-        ]
-    }
-}
-%}
 
 <!-- =============================================================== -->
 {% set cmds_cm_helm_exosol_01 =
@@ -858,16 +813,16 @@ spec:
 ('C', 'cat argocd/argocd-nginx.yaml',"",""),
 ('C', 'cat argocd/argocd-helm-nginx.yaml',"",""),
 
-('C','kc apply -f argocd-helm-nginx.yaml',"application.agocd.io/nginx created","application.agocd.io/nginx created"),
-('C','brw/argocd nginx',"application.agocd.io/nginx created","application.agocd.io/nginx created"),
+('C', 'kc apply -f argocd-helm-nginx.yaml',"application.agocd.io/nginx created","application.agocd.io/nginx created"),
+('C', 'brw/argocd nginx',"application.agocd.io/nginx created","application.agocd.io/nginx created"),
 
 ('C', 'cat argocd/argocd-helm-nginx-staging.yaml',"",""),
-('C','kc apply -f argocd-helm-nginx-staging.yaml',"application.agocd.io/nginx-staging created","application.agocd.io/nginx-staging created"),
-('C','brw/argocd nginx',"application.agocd.io/nginx-staging created","application.agocd.io/nginx-staging created"),
+('C', 'kc apply -f argocd-helm-nginx-staging.yaml',"application.agocd.io/nginx-staging created","application.agocd.io/nginx-staging created"),
+('C', 'brw/argocd nginx',"application.agocd.io/nginx-staging created","application.agocd.io/nginx-staging created"),
 
 ('C', 'cat argocd/argocd-helm-nginx-prod.yaml',"",""),
-('C','kc apply -f argocd-helm-nginx-prod.yaml',"application.agocd.io/nginx-prod created","application.agocd.io/nginx-prod created"),
-('C','brw/argocd nginx',"application.agocd.io/nginx-prod created","application.agocd.io/nginx-prod created"),
+('C', 'kc apply -f argocd-helm-nginx-prod.yaml',"application.agocd.io/nginx-prod created","application.agocd.io/nginx-prod created"),
+('C', 'brw/argocd nginx',"application.agocd.io/nginx-prod created","application.agocd.io/nginx-prod created"),
 
 ('C', 'kc get ns',data['get_ns_01'],""),
 
@@ -880,56 +835,26 @@ spec:
 ('C', 'kc get svc -n prod',"ngnix-alpine    ClusterIP   10.43.185.162   NN   80/TCP    23m39s",""),
 ('C', 'kc get cm -n prod',"ngnix-version    1  3m3s",""),
 ('C', 'kc get cm -n prod -o yaml',data['cm-nginx-prod-yaml'],""),
-
 ]
 %}
 
 <!-- ===================================================================================== -->
-{% set cmds_cm_helm_01 =
-[
-('C', "ls helm/python-helloworld",
+{% set yml_ns_a001 =
+"   apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: {{ .Values.namespace.name }}"%}
+
+{% set ls_pyhw_tpls_a001 =
 "+- templates
  |  +- deployment.yaml
  |  +- namespace.yaml
  +- Chart.yaml
  +- values-prod.yaml
- +- values.yaml",""),
+ +- values.yaml"
+%}
 
-('C','cat templates/deployment.yaml',
-"   apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      labels:
-        app: python-helloworld
-      name: python-helloworld
-      namespace: {{ .Values.namespace.name }}
-    spec:
-      replicas: {{ .Values.replicaCount }}
-      selector:
-        matchLabels:
-          app: python-helloworld
-      strategy:
-        rollingUpdate:
-          maxSurge: 25%
-          maxUnavailable: 25%
-        type: RollingUpdate
-      template:
-        metadata:
-          labels:
-            app: python-helloworld
-        spec:
-          containers:
-          - image: <b>{{ .Values.image.repository }}:{{ .Values.image.tag }}</b>
-            imagePullPolicy: IfNotPresent
-            name: python-helloworld",""),
-
-('C','cat templates/namespace.yaml',
-"   apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: {{ .Values.namespace.name }}",""),
-
-('C', 'cat Chart.yaml',
+{% set yml_cat_chart_a001 =
 "   apiVersion: v1
     name: python-helloworld
     description: Install a Python HelloWorld deployment
@@ -939,9 +864,10 @@ spec:
     version: 1.0.0
     maintainers:
     - name: kgamanji
-      email: kgamanji@xyz.com",""),
+      email: kgamanji@xyz.com"
+%}
 
-('C','cat values.yaml',
+{% set yml_values_a001 =
 "   namespace:
       name: test
 
@@ -949,13 +875,24 @@ spec:
       repository: pixelpotato/python-helloworld
       tag: v1.0.0
 
-    replicaCount: 3",""),
+    replicaCount: 3"
+%}
 
-('C','cat values-prod.yaml',
+{% set yml_values_prod_a001 =
 "   namespace:
-      name: prod",""),
+      name: prod"
+%}
 
-('C','vi argocd/argocd-python.yaml',
+{% set cmds_cm_helm_01 =
+[
+('C', 'ls helm/python-helloworld', ls_pyhw_tpls_a001,""),
+('C', 'cat templates/deployment.yaml',yml_dpl_a001  ,""),
+('C', 'cat templates/namespace.yaml',yml_ns_a001,""),
+('C', 'cat Chart.yaml', yml_cat_chart_a001,""),
+('C', 'cat values.yaml', yml_values_a001,""),
+('C', 'cat values-prod.yaml', yml_values_prod_a001,""),
+
+('C','cat argocd/argocd-python.yaml',
 "   apiVersion: argoproj.io/v1alpha1
     kind: Application
     metadata:
@@ -994,7 +931,6 @@ spec:
         targetRevision: HEAD",""),
 
 ('C','kc apply -f argocd-helm-python.yaml',"application.agocd.io/python-helloworld created","application.agocd.io/python-helloworld created"),
-
 ('C','brw/argocd python-helloworld',"application.agocd.io/python-helloworld created","application.agocd.io/python-helloworld created"),
 
 ('C',"cat argocd-helm-python-prod.yaml",
@@ -1018,7 +954,6 @@ spec:
 
 
 ('C','kc apply -f argocd-helm-python-prod.yaml',"application.agocd.io/python-helloworld-prod created","application.agocd.io/python-helloworld-prod created"),
-
 ('C','brw/argocd python-helloworld-prod',"application.agocd.io/python-helloworld-prod created","application.agocd.io/python-helloworld-prod created"),
 
 ('C','kc get ns',
@@ -1481,9 +1416,7 @@ spec: ...
 status: {}", ""),
 
 ('C', "kc create deploy  busbox --image=busybox  -r=5 -n demo --dry-run=client -o yaml > deploy.yaml", ""),
-
 ('C', "cat deploy.yaml", "....",""),
-
 ('C', "kc apply -f deploy.yaml", "created", ""),
 
 ('C', "kc get deploy -n demo",
@@ -1497,7 +1430,6 @@ busybox-6cf8756958-69xqm    0/1     completed   2   35s
 busybox-6cf8756958-j6xl2    0/1     completed   2   35s
 busybox-6cf8756958-mvh69    0/1     completed   2   35s
 busybox-6cf8756958-rkbpp    0/1     completed   2   35s",""),
-
 ]
 %}
 
@@ -1749,11 +1681,11 @@ metadata:
 <!-- ===================================================================================== -->
 {% set cmds_vagrant =
 [
+('C',"vg install", data['vgrfl001_woc'], "# vg version to check, # https://www.vagrantup.com/downloads"),
 ('C',"cat VagrantFile", data['vgrfl001_woc'], "# To package a Go hello-world application"),
-('C',"vg install", data['vgrfl001_woc'], "# https://www.vagrantup.com/downloads"),
-('C',"vg version", "Installed Version : 2.2.10 \n python manage.py runserver latest Version: 2.2.14", "# To package a Go hello-world application"),
-('C',"vg up","# create a vagrant box using the Vagrantfile in the current directory", "# create a vagrant box using the Vagrantfile in the current directory"),
-('C',"vg status","# Inspect available vagrant boxes", "# Inspect available vagrant boxes"),
+('T',"vg version", "Installed Version : 2.2.10 \n python manage.py runserver latest Version: 2.2.14", "# To package a Go hello-world application"),
+('C',"vg up","# vg status to check # create a vagrant box using the Vagrantfile in the current directory", "# create a vagrant box using the Vagrantfile in the current directory"),
+('T',"vg status","# Inspect available vagrant boxes", "# Inspect available vagrant boxes"),
 ('C',"vg ssh", "# SSH into the vagrant box
  # Note: this command uses the .vagrant folder to identify the details of the vagrant box", "# SSH into the vagrant box"),
 ]
@@ -1837,7 +1769,7 @@ metadata:
 
 ('C',"dk push pixelpotato/go-helloworld:v1.0.0",
 "# push the `python-helloworld` application in version v1.0.0
- # to the `pixelpotato` repository in DockerHub", ""),
+ # to the `pixelpotato` repository in DockerHub", "# dk login if necessary"),
 ]
 %}
 
@@ -1861,13 +1793,13 @@ metadata:
 
 ('C',"dk push pixelpotato/python-helloworld:v1.0.0",
 "# push the `python-helloworld` application in version v1.0.0
- # to the `pixelpotato` repository in DockerHub", ""),
+ # to the `pixelpotato` repository in DockerHub", "# dk login if necessary"),
 
-('C', "dk login", "# login the user dockerhub account", "# login the user dockerhub account"),
-('C', "dk logs container_id", "# show logs of the specified container", "# show logs of the specified container"),
-('C', "dk images", "# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
-('C', "dk ps","# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
-('C', "dk pull", "# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
+('T', "dk login", "# login the user dockerhub account", "# login the user dockerhub account"),
+('T', "dk logs container_id", "# show logs of the specified container", "# show logs of the specified container"),
+('T', "dk images", "# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
+('T', "dk ps","# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
+('T', "dk pull", "# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
 ]
 %}
 
@@ -1896,3 +1828,85 @@ metadata:
     'cmds_cm_helm_exosol_01': cmds_cm_helm_exosol_01,
 }
 %}
+
+<!-- =============================================================== -->
+{% set lessons = {
+    'Kubernetes': {
+        'title': 'Lesson 3: Container Orchestration with Kubernetes',
+        'sections':[
+            {
+                'id': '31',
+                'title': '1- Docker for Application packaging',
+                'labs':[
+                    (311,"1- Application Developent & Packaging(Docker) ['Python hello world', 'v1.0.0']", 'cmds_pyhw'),
+                    (312,"2- Application Developent & Packaging(Docker) ['Go hello world', 'v1.0.0']", 'cmds_gohw')
+                    ]
+            },
+            {
+                'id': '32',
+                'title': '2- Container Orchestration with Kubernetes',
+                'labs':[
+                    (321,"1- Vagrant", 'cmds_vagrant'),
+                    (322,"2- Kubernetes K3S", 'cmds_k3s2'),
+                    (323,"3- Application Deployment", 'cmds_appdpl01'),
+                    (324,"4- Application Development Demo go-helloworld v1.0.0", 'cmds_appdpldemo_01'),
+                    (325,"5- Application Development Demo go-helloworld v2.0.0", 'cmds_appdpldemo_02'),]
+            },
+            {
+                'id': '33',
+                'title': '3- Kubernetes Resources',
+                'labs':[
+                    (331,"1- Application Reachability Services + Ingress", 'cmds_appdpl_svc_01'),
+                    (332,"2- Application Configuration And Context"      , 'cmds_appcfg_cm_sec_01'),
+                    (333,"3- Demo Application Context Namespace"         , 'cmds_appcfg_ns_01'),
+                    (334,"4- Kubernetes resources exercice solution"    , 'cmds_appcfg_exo22'),]
+            },
+            {
+                'id': '34',
+                'title': '4- Declarative Kubernetes Manifests',
+                'labs':[
+                    (341,"1- Kubernetes resources exercice solution", 'cmds_manifests_01'),
+                    (342,"2- Kubernetes resources exercice solution", 'cmds_manifests_02'),
+                    (343,"3- Solution: Declarative Kubernetes Manifests", 'cmds_manifests_03'),]
+            },
+        ]
+    },
+    'ci_cd':{
+        'title': 'Lesson 5: CI/CD with Cloud Native Tooling',
+        'sections': [
+            {
+                'id': '51',
+                'title': '1- Continuous Intehgration',
+                'labs': [
+                    (511,"1- The CI Fundamentals", 'cmds_ci_01'),
+                    (512,"2- Exercise: Continuous Application Deployment", 'cmds_ci_02'),]
+            },
+            {
+                'id': '52',
+                'title': '2- Continuous Delevry',
+                'labs': [
+                    (521,"1- The CD Fundamentals", 'cmds_cd_01'),
+                    (522,"2- The Application deployment", 'cmds_cd_appdpl_01'),
+                    (523,"3- Solution: The CD Fundamentals Exercise", 'cmds_cd_exosol'),]
+            },
+            {
+                'id': '53',
+                'title': '3- Configuration Managers',
+                'labs': [
+                    (531,"1- Helm", 'cmds_cm_helm_01'),
+                    (532,"2- Helm Exo Solution", 'cmds_cm_helm_exosol_01'),]
+            }
+        ]
+    }
+}
+%}
+
+<!-- =============================================================== -->
+{% set program = {
+        'title': 'Cloud Native Fundamentals Scholarship Program',
+        'subtitle': 'Nanodegree Program - Suse/Udacity',
+        'lessons' : lessons,
+        'cmds' : cmds,
+    }
+%}
+<!-- =============================================================== -->

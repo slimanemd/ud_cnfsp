@@ -1,10 +1,12 @@
-{% from 'data/data_' + data + '.html' import cmds, lessons %}
+<!-- ================================================================= -->
+{% from 'data/data_' + data + '.html' import program %}
 
 <!-- prompt  -->
 {% set prompt = '$ ' %}
 
+<!-- ================================================================= -->
 <!-- template card  -->
-{% macro card_tpl2(p, i, cmd, outs, tpl, cmt) %}
+{% macro build_card_tpl(p, i, cmd, outs, tpl, cmt) %}
     <div class="card">
         <div class="card-header pd0mg0" id="h00{{i}}">
         <button class="btn btn-link collapsed pd0mg0 cmd01" style="margin-left:10px;" type="button" data-toggle="collapse"
@@ -15,12 +17,12 @@
         <div id="c{{p}}_00{{i}}" class="collapse" aria-labelledby="headingOne" data-parent="#a0{{p}}" style="">
             <div class="card-body">
                 {% if tpl == 'C' %}
-                    <pre> {{ outs }} </pre>
+                    <pre> {{ outs |remove_comments }} </pre>
                 {% else %}
                     <div class="accordion" id="a0{{p}}{{i}}">
                         {% set keys = (outs.keys()|list) %}
                         {% set vals = (outs.values()|list) %}
-                        {% for j in range(outs|length) %} {{ card_tpl2(i,i*10+j, keys[j], vals[j], 'C','') }} {% endfor %}
+                        {% for j in range(outs|length) %} {{ build_card_tpl(i,i*10+j, keys[j], vals[j]|remove_comments, 'C','') }} {% endfor %}
                      </div>
                 {% endif %}
             </div>
@@ -28,76 +30,96 @@
     </div>
 {% endmacro %}
 
-<!-- cards cllection  -->
-{% macro bloc_cap(p,title, dt) %}
-    {% if p > 0 %} <hr> {% endif %}
-    <h5>{{ title }}</h5>
+<!-- cards cllection  --><!-- bloc_cap title -->
+{% macro build_bloc_cap(dt, p, q) %}
     <div class="accordion" id="a0{{p}}">
         {% for i  in range(dt|length) %}
-            {{ card_tpl2(p,i, dt[i][1],dt[i][2], dt[i][0], dt[i][3]) }}
+            {% if (dt[i][0] == 'C') or (dt[i][0] == 'Y') %}
+                {{ build_card_tpl(p,i, dt[i][1],dt[i][2], dt[i][0], dt[i][3]) }}
+            {% endif %}
         {% endfor %}
     </div>
 {% endmacro %}
 
-<!-- main body  -->
-{% macro mc_body2(p_title, p_subtitle,  p_lessons) %}
-    <center> <h2>{{ p_title }} <br> {{ p_subtitle }} </h2></center>
 
-    {% for key in p_lessons.keys() %}
-            <br><br><br>
-            <h2><b>{{ p_lessons[key]['title'] }}</b></h2>
-            {% for item in p_lessons[key]['sections'] %}
-                <br>
-                <h3>{{ item['title'] }}</h3>
-                    {% for e in item['labs'] %}
-                        {{ bloc_cap(e[0],e[1], cmds[e[2]]) }}
-                    {% endfor %}
-            {% endfor %}
+<!-- build_session  -->
+{% macro build_session(labs, key, id) %}
+    {% for lab in labs %}
+        {{ build_lesson_subsection(key + "_" + (lab[0]|string), 5, lab[1], build_bloc_cap, program['cmds'][lab[2]], lab[0]) }}
     {% endfor %}
 {% endmacro %}
 
-{% set content = {
-    'cnfsp' : {
-        'title': 'Cloud Native Fundamentals Scholarship Program',
-        'subtitle': 'Nanodegree Program - Suse/Udacity',
-    },
-    'divers': {
-        'title': 'Divers Scholarship Program',
-        'subtitle': 'Divers - Suse/Udacity',
-    },
-    'git': {
-        'title': "GitHub commands",
-        'subtitle': "Git action & GitOps",
-    },
-}
-%}
+
+<!-- build_section  -->
+{% macro build_section(p_lessons, key, id) %}
+    {% for section in p_lessons[key]['sections'] %}
+        {{ build_lesson_subsection(key + "_" +  section['id'], 4, section['title'], build_session, section['labs'], id) }}
+    {% endfor %}
+{% endmacro %}
+
+<!-- build_lesson  -->
+{% macro build_lesson_subsection(id, level, title, mc_dop, p_lessons, id2) %}
+    <h{{level}} data-toggle="collapse" href="#collapseBlock{{id}}"
+        role="button" aria-expanded="false" aria-controls="collapseBlock{{id}}">
+        {{ title }}
+    </h{{level}}>
+
+    <div class="collapse" id="collapseBlock{{id}}" >
+        <div class="card card-body" style="border: 0px solid white;">{{ mc_dop(p_lessons, id, id2) }} </div>
+    </div>
+{%  endmacro %}
 
 
+<!-- main body p_title, p_subtitle,  p_lessons)  -->
+{% macro build_body() %}
+    <div id="mainctn">
+        <center> <h2>{{ program['title'] }} <br> {{ program['subtitle'] }} </h2></center><br><br>
+
+        {% for key in program['lessons'].keys() %}
+            {{ build_lesson_subsection(key, 2, program['lessons'][key]['title'], build_section, program['lessons'], 1) }}
+        {% endfor %}
+
+    </div>
+{% endmacro %}
+
+<!-- ================================================================= -->
+{% macro style01() %}
+    body{
+        background-color:#264653;
+    }
+
+    #mainctn {
+        background-color:#ffffff;
+        font-family: Helvetica, sans-serif;
+        width:80%;
+        height: 1000%;
+        margin:auto;
+        margin-top: 20px;
+        padding:20px;
+    }
+
+    .cmd01 {
+      font-size: 14px;
+    }
+
+    .pd0mg0 {
+        padding:0px;
+        margin:0px;
+    }
+{% endmacro %}
+
+<!-- ================================================================= -->
 <html>
     <head>
         <link href="https://getbootstrap.com/docs/4.1/dist/css/bootstrap.min.css" rel="stylesheet">
-        <style>
-            body {
-              font-family: Helvetica, sans-serif;
-              width:90%;
-              margin:auto;
-              padding:20px;
-            }
-
-            .cmd01 {
-              font-size: 14px;
-            }
-
-            .pd0mg0 {
-                padding:0px;
-                margin:0px;
-            }
-        </style>
+        <style> {{ style01() }} </style>
     </head>
     <body>
-        {{ mc_body2(content[data]['title'], content[data]['title'], lessons) }}
+        {{ build_body() }}
         <!-- ================================================================= -->
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
         <script src="https://getbootstrap.com/docs/4.1/dist/js/bootstrap.min.js"></script>
     </body>
 </html>
+
+<!-- ================================================================= -->

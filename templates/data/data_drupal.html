@@ -1,0 +1,89 @@
+<!-- ===================================================================================== -->
+{% set cmds_pyhw =
+[
+('C',"name", "", "required"),
+('C',"description", "", "recommended"),
+('C',"core", "", "required"),
+('C',"stylesheets", "", ""),
+('C',"scripts", "", ""),
+('C',"files", "", ""),
+('C',"dependencies", "", ""),
+('C',"package", "", ""),
+('C',"php", "", ""),
+('C',"version", "", "discouraged"),
+('C',"configure", "", ""),
+('C',"required", "", ""),
+('C',"hidden", "", ""),
+('C',"project", "", "Discouraged, packaging use only"),
+('C',"project", "", "status url Only used for custom modules not submitted to drupal.org"),
+('C',"", "", ""),
+('C',"Example01 sample.info file", "name = Really Neat Widget
+ description = Provides a really neat widget for your site's sidebar.
+ core = 7.x
+ package = Views
+ dependencies[] = views:views
+ dependencies[] = panels:panels
+ files[] = tests/example.test
+ configure = admin/config/content/example", ""),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds_ci_01 =
+[
+('C',"", "", "33. Git Bootcamp and Cheat Sheet"),
+('C',"git clone git@github.com:<username>/cpython.git", "", ""),
+('C',"cd cpython", "", ""),
+('C',"git remote add upstream git@github.com:python/cpython.git", "", ""),
+('C',"", "", ""),
+]
+%}
+
+<!-- ===================================================================================== -->
+{% set cmds = {
+    'cmds_pyhw'             : cmds_pyhw,
+    'cmds_ci_01'            : cmds_ci_01 ,
+}
+%}
+
+<!-- =============================================================== -->
+
+
+{% set lessons = {
+    'Key01': {
+        'title': 'Lesson 1: Module YAML',
+        'sections':[
+            {
+                'title': 'A- GitHub Commands Add',
+                'labs':[
+                    (10,"Writing module .info files (Drupal 7.x)"      , 'cmds_pyhw'),
+                    (11,"Open an existing local repo", 'cmds_pyhw'),
+                    ]
+            },
+        ]
+    },
+
+    'Actions':{
+        'title': 'Lesson 2: HOOKs',
+        'sections': [
+            {
+                'title': 'Work',
+                'labs': [
+                    (20,"Check if a repo has changes", 'cmds_ci_01'),
+                    (21,"Get diff of file changes"   , 'cmds_ci_01'),
+                ]
+            },
+        ]
+    }
+}
+%}
+
+<!-- =============================================================== -->
+{% set program = {
+        'title': "Drupal commands",
+        'subtitle': "Drupal action",
+        'lessons' : lessons,
+        'cmds' : cmds,
+    }
+%}
+<!-- =============================================================== -->
