@@ -1774,38 +1774,28 @@ metadata:
 %}
 
 <!-- ===================================================================================== -->
-{% set cmds_pyhw =
+{% set cmds_jj001 =
 [
-('C',"cat app.py", data['cdsrc_pyhw01'], "# Python hello-world application"),
+('C',"custom app.template.filter", '
+# from app import my_app
+# my_blueprint = Blueprint("blue_name", __name__, template_folder="templates")
+# xxx = my_app / my_blueprint
+
+@xxx.app_template_filter()
+def pretty_date(dttm):
+    return dttm.strftime("%m/%d")
+
+# my_template.html
+My date is {{ my_object.created_at | pretty_date }}',
+"# @i: https://michaelcho.me/article/custom-jinja-template-filters-in-flask"),
+
 ('C',"cat Dockerfile", data['dkrfl_pyhw'], "# To package a Python hello-world application"),
-
-('C',"dk build -t python-helloworld .",
-"# build an image using the Dockerfile from the `lesson1/python-app` directory
- (default current directory .)", ""),
-
-('C',"dk run -d -p 5111:5000 python-helloworld",
-"# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
-
-('C',"dk tag python-helloworld pixelpotato/python-helloworld:v1.0.0",
-"# tag the `python-helloworld` image, to be pushed
- # in the `pixelpotato` repository, with the `python-helloworld` image name
- # and version `v1.0.0`", ""),
-
-('C',"dk push pixelpotato/python-helloworld:v1.0.0",
-"# push the `python-helloworld` application in version v1.0.0
- # to the `pixelpotato` repository in DockerHub", "# dk login if necessary"),
-
-('T', "dk login", "# login the user dockerhub account", "# login the user dockerhub account"),
-('T', "dk logs container_id", "# show logs of the specified container", "# show logs of the specified container"),
-('T', "dk images", "# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
-('T', "dk ps","# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
-('T', "dk pull", "# run the `python-helloworld` image, in detached mode and expose it on port `5111`", ""),
 ]
 %}
 
 <!-- ===================================================================================== -->
 {% set cmds = {
-    'cmds_pyhw'             : cmds_pyhw,
+    'cmds_jj001'             : cmds_jj001,
     'cmds_gohw'             : cmds_gohw,
     'cmds_vagrant'          : cmds_vagrant,
     'cmds_k3s2'             : cmds_k3s2,
@@ -1832,13 +1822,13 @@ metadata:
 <!-- =============================================================== -->
 {% set lessons = {
     'Kubernetes': {
-        'title': 'Lesson 3: Container Orchestration with Kubernetes',
+        'title': 'Lesson 1: Jinja',
         'sections':[
             {
                 'id': '31',
-                'title': '1- Docker for Application packaging',
+                'title': '1- Jinja',
                 'labs':[
-                    (311,"1- Application Developent & Packaging(Docker) ['Python hello world', 'v1.0.0']", 'cmds_pyhw'),
+                    (311,"1- Custom Jinja template filters in Flask", 'cmds_jj001'),
                     (312,"2- Application Developent & Packaging(Docker) ['Go hello world', 'v1.0.0']", 'cmds_gohw')
                     ]
             },

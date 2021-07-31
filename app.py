@@ -4,7 +4,7 @@
 from os.path import abspath, join as join_path, pardir
 
 # 3rd party:
-from flask import Flask, redirect, render_template
+from flask import Flask, redirect, render_template, request
 
 # my libs
 from git_webhook import webhook #import git #import os
@@ -12,7 +12,7 @@ from git_webhook import webhook #import git #import os
 # ==========================================================
 # varaibles
 instance_path = abspath(join_path(abspath(__file__), pardir))
-
+#process_comments = False
 
 # application
 app = Flask(
@@ -23,14 +23,17 @@ app = Flask(
 
 # ==========================================================
 # jinja templates
-process_comments = True
+# process_comments = True
 
 
 # remove comments
 @app.template_filter()
 def remove_comments(code):
+    process_comments = False
+    if 'wc' in request.args.keys(): process_comments = True
+
     output = code
-    if process_comments == True:
+    if process_comments == False:
         lines = code.splitlines()
         lines_without_comments = [line for line in lines if not (line.__contains__("#") or line=="")]
         output = "\n" +  "\n".join(lines_without_comments)    # "" + ("\n".join(lines_without_comments)) + ""
