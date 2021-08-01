@@ -1,6 +1,93 @@
 <!-- =============================================================== -->
 {% set yaml_dpl01 = '## Set the API endpoint used to create the Deployment resource.' %}
 
+<!--
+if [%1] == [] goto main
+SET image=%1
+
+SET repo=moseo
+if [%2] NEQ [] SET repo=%2
+
+SET version=1.0.0
+if [%3] NEQ [] SET repo=%3
+
+echo %image% %repo% %version%
+
+docker build -t %image% .
+docker tag %image% %repo%/%image%:v%version%
+docker push %repo%/%image%:v%version%
+
+goto exit
+
+::===============================
+:main
+echo should provide first arg
+:
+ goto exit
+
+:exit
+::echo bye
+
+
+docker build -t mypyhw01 .
+
+docker run -d -p 5002:5000 mypyhw01
+docker images
+docker ps
+docker [container] stop id_myppyhw01
+docker [container] start id_myppyhw01
+docker [container] rm id0
+
+u01m01# docker tag image0 repo0/image0:v1.0.0
+u01m01# docker push repo0/image0:v1.0.0
+
+
+u02m02# docker pull repo0/image0:v1.0.0
+u02m02# docker run -d -p 5000:5000 repo0/image0:v1.0.0
+u02m02# brwsr lh:5000  => Hello World
+
+
+
+====================================================
+# react-app demo
+# d:/me/code/mygit/myrchw01
+# steps
+
+npm install -g creat-react-app
+# npm uninstall -g creat-react-app
+# yarn global remove create-react-app
+
+npx create-react-app my_app01
+cd my-app
+npm start
+
+
+
+
+
+# pull official base image
+FROM node:13.12.0-alpine
+
+# set working directory
+WORKDIR /app
+
+# add `/app/node_modules/.bin` to $PATH
+ENV PATH /app/node_modules/.bin:$PATH
+
+# install app dependencies
+COPY ./myrchw01/package.json ./
+RUN npm install --silent
+RUN npm install react-scripts@3.4.1 -g --silent
+
+# add app
+COPY ./myrchw01/ ./
+
+# start app
+CMD ["npm", "start"]
+
+
+-->
+
 <!-- =============================================================== -->
 {% set cdsrc_pyhw01 ="
 from flask import Flask
